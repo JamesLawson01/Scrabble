@@ -232,7 +232,7 @@ namespace Scrabble
                 char letter = tile.Letter;
                 Image image = new();
                 image.Source = new BitmapImage(new Uri($"pack://application:,,,/letters/{letter}.png", UriKind.Absolute));
-                image.AllowDrop = true;
+                //image.AllowDrop = true;
                 image.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(DragLetter);
                 tileDock.Children.Add(image);
             }
@@ -245,19 +245,19 @@ namespace Scrabble
             DataObject data = new();
             data.SetData(image.Source);
             ImageSource originalImage = image.Source;
-            Debug.WriteLine(originalImage);
-            //StackPanel parent = (StackPanel)image.Parent;
 
+            //drag from tile dock
             if (image.Parent == tileDock)
             {
                 tileDock.Children.Remove(image);
                 if (DragDrop.DoDragDrop(image, data, DragDropEffects.Move) == DragDropEffects.None)
                 {
+                    //drag operation failed
                     tileDock.Children.Add(image);
                 }
 
             }
-            else
+            else    //drag from gameboard
             {
                 foreach (Border border in playGrid.Children)
                 {
@@ -268,6 +268,7 @@ namespace Scrabble
                         loopImage.Source = nullImage;
                         if (DragDrop.DoDragDrop(image, data, DragDropEffects.Move) == DragDropEffects.None)
                         {
+                            //drag operation failed
                             Debug.WriteLine(image);
                             Debug.WriteLine(originalImage);
                             loopImage.Source = originalImage;
