@@ -91,6 +91,8 @@ namespace Scrabble
         // Used when generating the Tiles. The space is used for the blank tiles
         private const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
 
+        private const string uriPrefix = "pack://application:,,,/";
+
         private readonly Dictionary<char, int> letterNums = new()
         {
             { 'A', 9 },
@@ -126,7 +128,11 @@ namespace Scrabble
 
         private readonly List<User> players;
 
-        private readonly BitmapImage nullImage = new(new Uri("pack://application:,,,/Blank Image.png", UriKind.Absolute));
+        private User currentPlayer;
+
+        private readonly BitmapImage nullImage = new(new Uri($"{uriPrefix}Blank Image.png", UriKind.Absolute));
+
+        private List<Tile> turnTiles = new();
 
         public MainWindow()
         {
@@ -164,28 +170,28 @@ namespace Scrabble
                     {
                         if (bonus == Bonus.TripleWord)
                         {
-                            image.Source = new BitmapImage(new Uri("pack://application:,,,/3x word.png", UriKind.Absolute));
+                            image.Source = new BitmapImage(new Uri($"{uriPrefix}3x word.png", UriKind.Absolute));
                             border.Background = Brushes.Red;
                         }
                         if (bonus == Bonus.DoubleWord)
                         {
-                            image.Source = new BitmapImage(new Uri("pack://application:,,,/2x word.png", UriKind.Absolute));
+                            image.Source = new BitmapImage(new Uri($"{uriPrefix}2x word.png", UriKind.Absolute));
                             border.Background = Brushes.LightPink;
                         }
                         if (bonus == Bonus.TripleLetter)
                         {
-                            image.Source = new BitmapImage(new Uri("pack://application:,,,/3x letter.png", UriKind.Absolute));
+                            image.Source = new BitmapImage(new Uri($"{uriPrefix}3x letter.png", UriKind.Absolute));
                             border.Background = Brushes.DarkBlue;
                         }
                         if (bonus == Bonus.DoubleLetter)
                         {
-                            image.Source = new BitmapImage(new Uri("pack://application:,,,/2x letter.png", UriKind.Absolute));
+                            image.Source = new BitmapImage(new Uri($"{uriPrefix}2x letter.png", UriKind.Absolute));
                             border.Background = Brushes.LightBlue;
                         }
                     }
                     else if (i == 7 && j == 7)
                     {
-                        image.Source = new BitmapImage(new Uri("pack://application:,,,/Star.png", UriKind.Absolute));
+                        image.Source = new BitmapImage(new Uri($"{uriPrefix}Star.png", UriKind.Absolute));
                     }
                     else
                     {
@@ -210,7 +216,7 @@ namespace Scrabble
             //shuffle
             int length = letterPool.Count;
             for (int i = 0; i < length; i++) ;
-            Random rnd = new Random();
+            Random rnd = new();
             for (int i = 0; i < length; i++)        // for each letter in the list, swap it with another one
             {
                 int dest = rnd.Next(0, length - 1);
@@ -225,13 +231,14 @@ namespace Scrabble
             letterPool.RemoveRange(0, 7);
             players.Add(new AI(givenName, letterPool.GetRange(0, 7).ToArray(), AI.Difficulty.Medium));
             letterPool.RemoveRange(0, 7);
+            currentPlayer = players[0];
 
             //add user's tiles to the tile dock
             foreach (Tile tile in players[0].Tiles)
             {
                 char letter = tile.Letter;
                 Image image = new();
-                image.Source = new BitmapImage(new Uri($"pack://application:,,,/letters/{letter}.png", UriKind.Absolute));
+                image.Source = new BitmapImage(new Uri($"{uriPrefix}letters/{letter}.png", UriKind.Absolute));
                 //image.AllowDrop = true;
                 image.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(DragLetter);
                 tileDock.Children.Add(image);
@@ -245,6 +252,22 @@ namespace Scrabble
             DataObject data = new();
             data.SetData(image.Source);
             ImageSource originalImage = image.Source;
+            Uri imageUri = ((BitmapImage) originalImage).UriSource;
+
+            //match dragged letter to tile
+            Tile tile = null;
+            foreach (Tile loopTile in currentPlayer.Tiles)
+            {
+                if (loopTile.Letter == imageUri.ToString()[uriPrefix.Length + "letters.".Length])
+                {
+                    tile = loopTile;
+                    break;     //tile found
+                }
+            }
+            if (tile == null)
+            {
+                throw new Exception("Tile not found");
+            }
 
             //drag from tile dock
             if (image.Parent == tileDock)
@@ -273,6 +296,10 @@ namespace Scrabble
                             Debug.WriteLine(originalImage);
                             loopImage.Source = originalImage;
                             Debug.WriteLine("it gets here");
+                        }
+                        else
+                        {
+                            turnTiles.Add(tile);
                         }
                         break;
                     }
