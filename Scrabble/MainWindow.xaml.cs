@@ -275,14 +275,12 @@ namespace Scrabble
             else    //drag from gameboard
             {
                 Tile tile = GetTileFromImage(image);
-                Image gridImage = FindImage(image);             //
-                //Image gridImage = image;                          //######################################################################
-                gridImage.Source = nullImage;
-                Debug.WriteLine($"col: {Grid.GetColumn(gridImage)} row: {Grid.GetRow(gridImage)}");
+                image.Source = nullImage;
+                Debug.WriteLine($"col: {Grid.GetColumn(image)} row: {Grid.GetRow(image)}");
                 if (DragDrop.DoDragDrop(image, data, DragDropEffects.Move) == DragDropEffects.None)
                 {
                     //drag operation failed
-                    gridImage.Source = originalImage;
+                    image.Source = originalImage;
                 }
                 else
                 {
