@@ -9,7 +9,7 @@ namespace Scrabble
         public char Letter { get; }
 
         // The ? signifies that coord should be nullable
-        public Coord? Coord { get; }
+        public Coord? Coord { get; set; }
 
         public Bonus LetterBonus { get; }
 

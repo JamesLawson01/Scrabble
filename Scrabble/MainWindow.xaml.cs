@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -92,6 +93,8 @@ namespace Scrabble
         private const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
 
         private const string uriPrefix = "pack://application:,,,/";
+
+        private bool isFirstTurn = true;
 
         private readonly Dictionary<char, int> letterNums = new()
         {
@@ -251,23 +254,9 @@ namespace Scrabble
             Image image = (Image)sender;
             DataObject data = new();
             data.SetData(image.Source);
-            ImageSource originalImage = image.Source;
-            Uri imageUri = ((BitmapImage) originalImage).UriSource;
+            //data.SetData(false);
 
-            //match dragged letter to tile
-            Tile tile = null;
-            foreach (Tile loopTile in currentPlayer.Tiles)
-            {
-                if (loopTile.Letter == imageUri.ToString()[uriPrefix.Length + "letters.".Length])
-                {
-                    tile = loopTile;
-                    break;     //tile found
-                }
-            }
-            if (tile == null)
-            {
-                throw new Exception("Tile not found");
-            }
+            ImageSource originalImage = image.Source;
 
             //drag from tile dock
             if (image.Parent == tileDock)
@@ -278,31 +267,34 @@ namespace Scrabble
                     //drag operation failed
                     tileDock.Children.Add(image);
                 }
-
+                else
+                {
+                    data.SetData(true);
+                }
             }
             else    //drag from gameboard
             {
-                foreach (Border border in playGrid.Children)
+                Tile tile = GetTileFromImage(image);
+                Image gridImage = FindImage(image);             //
+                //Image gridImage = image;                          //######################################################################
+                gridImage.Source = nullImage;
+                Debug.WriteLine($"col: {Grid.GetColumn(gridImage)} row: {Grid.GetRow(gridImage)}");
+                if (DragDrop.DoDragDrop(image, data, DragDropEffects.Move) == DragDropEffects.None)
                 {
-                    Viewbox viewbox = (Viewbox)border.Child;
-                    Image loopImage = (Image)viewbox.Child;
-                    if (loopImage == image)
+                    //drag operation failed
+                    gridImage.Source = originalImage;
+                }
+                else
+                {
+                    //to document
+                    /*foreach (Tile loopTile in turnTiles)
                     {
-                        loopImage.Source = nullImage;
-                        if (DragDrop.DoDragDrop(image, data, DragDropEffects.Move) == DragDropEffects.None)
+                        if (loopTile.Coord == GetGridCoord(image))
                         {
-                            //drag operation failed
-                            Debug.WriteLine(image);
-                            Debug.WriteLine(originalImage);
-                            loopImage.Source = originalImage;
-                            Debug.WriteLine("it gets here");
+                            turnTiles.Remove(loopTile);
                         }
-                        else
-                        {
-                            turnTiles.Add(tile);
-                        }
-                        break;
-                    }
+                    }*/
+                    turnTiles.Remove(tile);
                 }
             }
         }
@@ -313,6 +305,115 @@ namespace Scrabble
             Image image = (Image)sender;
             image.Source = (ImageSource)e.Data.GetData("System.Windows.Media.Imaging.BitmapImage");
             image.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(DragLetter);
+
+            //match dragged letter to tile
+            Tile tile = GetTileFromImage(image);
+            turnTiles.Add(tile);
+
+            bool validArrangement = CheckLetterLocation(turnTiles);
+            Debug.WriteLine(validArrangement);
+        }
+
+        //match an image object to one on the board
+        private Image FindImage(Image matchImage)
+        {
+            foreach (Border border in playGrid.Children)
+            {
+                Viewbox viewbox = (Viewbox)border.Child;
+                Image loopImage = (Image)viewbox.Child;
+                if (loopImage == matchImage)
+                {
+                    return loopImage;
+                }
+            }
+            return null;
+        }
+
+        //Gets the letter represented by an Image
+        private char GetLetterFromImage(Image image)
+        {
+            ImageSource imageSource = image.Source;
+            Uri imageUri = ((BitmapImage)imageSource).UriSource;
+            string uriString = imageUri.ToString();
+            string checkString = $"{uriPrefix}letters/ .png";
+
+            //validate that the image is of a letter
+            if (uriString.StartsWith($"{uriPrefix}letters/") && uriString.EndsWith(".png") && uriString.Length == checkString.Length)
+            {
+                return uriString[uriPrefix.Length + "letters.".Length];
+            }
+            else
+            {
+                throw new ArgumentException(message: $"{nameof(image)} does not represent a letter");
+            }
+        }
+
+        //Gets the location of an image on the gameboard
+        private Coord GetGridCoord(Image matchImage)
+        {
+            int columns = playGrid.Columns;
+
+            int index = playGrid.Children.IndexOf((matchImage.Parent as Viewbox).Parent as Border);
+            if (index == -1)
+            {
+                throw new ArgumentOutOfRangeException(paramName: nameof(matchImage), message: "Image not found on the gameboard");
+            }
+
+            int row = index / columns;
+            int column = index % columns;
+            Debug.WriteLine($"Found at ({column}, {row})");
+            return new Coord(column, row);
+        }
+
+        //Generates a Tile from an image
+        private Tile GetTileFromImage(Image image)
+        {
+            return new Tile(GetLetterFromImage(image), GetGridCoord(image));
+        }
+
+        private bool CheckLetterLocation(List<Tile> tiles)
+        {
+            if (tiles.Count == 1)
+            {
+                //only one letter placed, so no need to check
+                return true;
+            }
+            else
+            {
+                int same;
+                if (tiles[0].Coord.X == tiles[1].Coord.X)
+                {
+                    //all x values should be the same
+                    same = tiles[0].Coord.X;
+                    foreach (Tile tile in tiles)
+                    {
+                        if (tile.Coord.X != same)
+                        {
+                            //Not all in a line, so arrangement not valid
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                else if (tiles[0].Coord.Y == tiles[1].Coord.Y)
+                {
+                    //all y values should be the same
+                    same = tiles[0].Coord.Y;
+                    foreach (Tile tile in tiles)
+                    {
+                        if (tile.Coord.Y != same)
+                        {
+                            //not all in a line, so arrangement not valid.
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
     }
 }
