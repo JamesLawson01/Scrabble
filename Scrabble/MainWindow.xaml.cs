@@ -284,15 +284,15 @@ namespace Scrabble
                 }
                 else
                 {
-                    //to document
-                    /*foreach (Tile loopTile in turnTiles)
+                    foreach (Tile loopTile in turnTiles)
                     {
                         if (loopTile.Coord == GetGridCoord(image))
                         {
                             turnTiles.Remove(loopTile);
+                            break;
                         }
-                    }*/
-                    turnTiles.Remove(tile);
+                    }
+                    //turnTiles.Remove(tile);
                 }
             }
         }
