@@ -295,6 +295,10 @@ namespace Scrabble
                     //turnTiles.Remove(tile);
                 }
             }
+
+            bool validArrangement = CheckLetterLocation(turnTiles);
+            Debug.WriteLine(validArrangement);
+
         }
 
         //end drag
@@ -307,9 +311,6 @@ namespace Scrabble
             //match dragged letter to tile
             Tile tile = GetTileFromImage(image);
             turnTiles.Add(tile);
-
-            bool validArrangement = CheckLetterLocation(turnTiles);
-            Debug.WriteLine(validArrangement);
         }
 
         //match an image object to one on the board
@@ -371,6 +372,7 @@ namespace Scrabble
 
         private bool CheckLetterLocation(List<Tile> tiles)
         {
+            Orientation orientation;
             if (tiles.Count == 1)
             {
                 //only one letter placed, so no need to check
@@ -382,6 +384,7 @@ namespace Scrabble
                 if (tiles[0].Coord.X == tiles[1].Coord.X)
                 {
                     //all x values should be the same
+                    orientation = Orientation.Vertical;
                     same = tiles[0].Coord.X;
                     foreach (Tile tile in tiles)
                     {
@@ -391,11 +394,11 @@ namespace Scrabble
                             return false;
                         }
                     }
-                    return true;
                 }
                 else if (tiles[0].Coord.Y == tiles[1].Coord.Y)
                 {
                     //all y values should be the same
+                    orientation = Orientation.Horizontal;
                     same = tiles[0].Coord.Y;
                     foreach (Tile tile in tiles)
                     {
@@ -405,13 +408,47 @@ namespace Scrabble
                             return false;
                         }
                     }
-                    return true;
                 }
                 else
                 {
                     return false;
                 }
+
+                //Check tiles are adjecent
+                List<Tile> sortedTiles = SortTiles(tiles, orientation);
+                for (int i=1; i<sortedTiles.Count; i++)
+                {
+                    if (orientation == Orientation.Vertical)
+                    {
+                        if (sortedTiles[i].Coord.Y != sortedTiles[i - 1].Coord.Y + 1)
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if (sortedTiles[i].Coord.X != sortedTiles[i - 1].Coord.X + 1)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                return true;
             }
+        }
+
+        private List<Tile> SortTiles(List<Tile> tiles, Orientation orientation)
+        {
+            List<Tile> sortedTiles;
+            if (orientation == Orientation.Horizontal)
+            {
+                sortedTiles = tiles.OrderBy(tile => tile.Coord.X).ToList();
+            }
+            else
+            {
+                sortedTiles = (List<Tile>)tiles.OrderBy(tile => tile.Coord.Y).ToList(); 
+            }
+            return sortedTiles;
         }
     }
 }
