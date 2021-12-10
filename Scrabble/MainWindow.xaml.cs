@@ -297,6 +297,9 @@ namespace Scrabble
             bool validArrangement = CheckLetterLocation(turnTiles);
             Debug.WriteLine(validArrangement);
 
+            Word testWord = new Word(turnTiles);
+            Debug.WriteLine(testWord.Validate());
+
         }
 
         //end drag
