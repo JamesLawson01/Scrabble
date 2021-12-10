@@ -94,8 +94,6 @@ namespace Scrabble
 
         private const string uriPrefix = "pack://application:,,,/";
 
-        private bool isFirstTurn = true;
-
         private readonly Dictionary<char, int> letterNums = new()
         {
             { 'A', 9 },
@@ -372,6 +370,23 @@ namespace Scrabble
 
         private bool CheckLetterLocation(List<Tile> tiles)
         {
+            if (players[0].numTurns == 0)
+            {
+                bool centre = false;
+                foreach (Tile tile in tiles)
+                {
+                    if (tile.Coord == new Coord(7, 7))
+                    {
+                        centre = true;
+                        break;
+                    }
+                }
+                if (!centre)
+                {
+                    return false;
+                }
+            }
+
             Orientation orientation;
             if (tiles.Count == 1)
             {

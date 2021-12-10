@@ -14,6 +14,8 @@ namespace Scrabble
         //tiles the user can play
         public Tile[] Tiles { get; }
 
+        public int numTurns { get; }
+
 
         public User(string username, Tile[] tiles)
         {
