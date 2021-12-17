@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Scrabble
 {
@@ -14,7 +15,8 @@ namespace Scrabble
         //tiles the user can play
         public Tile[] Tiles { get; }
 
-        public int numTurns { get; }
+        private int numTurns;
+        public int NumTurns { get { return numTurns; } }
 
 
         public User(string username, Tile[] tiles)
@@ -37,6 +39,26 @@ namespace Scrabble
         public void AddWord(Word word)
         {
             words.Add(word);
+        }
+
+        public void IncrementTurns()
+        {
+            numTurns++;
+        }
+
+        //To work on
+        public void ChangeTiles(List<Tile> oldTiles, List<Tile> newTiles)
+        {
+            foreach (Tile tile in Tiles)
+            {
+                foreach (Tile oldTile in oldTiles)
+                {
+                    if (tile == oldTile)
+                    {
+                        Debug.WriteLine("found matching tiles");
+                    }
+                }
+            }
         }
     }
 }

@@ -61,9 +61,9 @@
         <Border Style="{StaticResource borderStyle}" Grid.Column="1" Grid.Row="1" Margin="5,10,10,10" MaxWidth="500" HorizontalAlignment="Right">
             <StackPanel Orientation="Vertical">
                 <Label Content="Words made" Style="{StaticResource bigTextStyle}"/>
-                <StackPanel CanVerticallyScroll="True" Orientation="Vertical">
-
-                    <StackPanel x:Name="wordsPlayed" Orientation="Horizontal">
+                <StackPanel x:Name="wordList" CanVerticallyScroll="True" Orientation="Vertical">
+                    <!--
+                    <StackPanel Orientation="Horizontal">
                         <Label Content="computer" Style="{StaticResource smallTextStyle}"/>
                         <Button Content="🔍">
                             <Button.ToolTip>
@@ -71,7 +71,7 @@
                             </Button.ToolTip>
                         </Button>
                     </StackPanel>
-
+                    -->
                 </StackPanel>
             </StackPanel>
         </Border>
@@ -97,7 +97,7 @@
         <!-- Game control buttons -->
         <Border Style="{StaticResource borderStyle}" Margin="110,5,110,10" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                <Button x:Name="finishMove" Content="Finish turn"/>
+                <Button x:Name="finishMove" Content="Finish turn" Click="FinishTurn"/>
                 <Button x:Name="swapTile" Content="Swap"/>
             </StackPanel>
         </Border>
