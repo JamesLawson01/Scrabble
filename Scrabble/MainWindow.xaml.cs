@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,8 +13,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Scrabble
 {
@@ -127,6 +126,8 @@ namespace Scrabble
 
         private List<Tile> letterPool = new();
 
+        private List<Tile> playedTiles = new();
+
         private readonly List<User> players;
 
         private User currentPlayer;
@@ -151,7 +152,6 @@ namespace Scrabble
                     Border border = new();
                     border.BorderBrush = Brushes.White;
                     border.BorderThickness = new Thickness(1, 1, 1, 1);
-                    border.Background = new SolidColorBrush(Color.FromRgb(0x79, 0x97, 0xB9));
                     border.CornerRadius = new CornerRadius(5);
                     //border.AllowDrop = true;
                     //border.Drop = new DragEventHandler()
@@ -167,37 +167,9 @@ namespace Scrabble
                     viewbox.Stretch = Stretch.Uniform;
 
                     //check for bonuses
-                    if (bonusLocations.TryGetValue(coord, out Bonus bonus))
-                    {
-                        if (bonus == Bonus.TripleWord)
-                        {
-                            image.Source = new BitmapImage(new Uri($"{uriPrefix}3x word.png", UriKind.Absolute));
-                            border.Background = Brushes.Red;
-                        }
-                        if (bonus == Bonus.DoubleWord)
-                        {
-                            image.Source = new BitmapImage(new Uri($"{uriPrefix}2x word.png", UriKind.Absolute));
-                            border.Background = Brushes.LightPink;
-                        }
-                        if (bonus == Bonus.TripleLetter)
-                        {
-                            image.Source = new BitmapImage(new Uri($"{uriPrefix}3x letter.png", UriKind.Absolute));
-                            border.Background = Brushes.DarkBlue;
-                        }
-                        if (bonus == Bonus.DoubleLetter)
-                        {
-                            image.Source = new BitmapImage(new Uri($"{uriPrefix}2x letter.png", UriKind.Absolute));
-                            border.Background = Brushes.LightBlue;
-                        }
-                    }
-                    else if (i == 7 && j == 7)
-                    {
-                        image.Source = new BitmapImage(new Uri($"{uriPrefix}Star.png", UriKind.Absolute));
-                    }
-                    else
-                    {
-                        image.Source = nullImage;
-                    }
+                    image.Source = GetBonusImageFromCoord(coord);
+                    border.Background = GetBonusColourFromCoord(coord);
+
                     viewbox.Child = image;
                     border.Child = viewbox;
                     playGrid.Children.Add(border);
@@ -243,6 +215,57 @@ namespace Scrabble
                 //image.AllowDrop = true;
                 image.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(DragLetter);
                 tileDock.Children.Add(image);
+            }
+        }
+
+        /*private void AddTilesToDock(User user)
+        {
+            int numNeeded = 7 - user.Tiles.Length;
+
+            for (int i = 0; i < numNeeded; i++)
+            {
+                
+            }
+        }*/
+        private BitmapImage GetBonusImageFromCoord(Coord coord)
+        {
+            if (bonusLocations.TryGetValue(coord, out Bonus bonus))
+            {
+                return bonus switch
+                {
+                    Bonus.TripleWord => new BitmapImage(new Uri($"{uriPrefix}3x word.png", UriKind.Absolute)),
+                    Bonus.DoubleWord => new BitmapImage(new Uri($"{uriPrefix}2x word.png", UriKind.Absolute)),
+                    Bonus.TripleLetter => new BitmapImage(new Uri($"{uriPrefix}3x letter.png", UriKind.Absolute)),
+                    Bonus.DoubleLetter => new BitmapImage(new Uri($"{uriPrefix}2x letter.png", UriKind.Absolute)),
+                    _ => nullImage,
+                };
+            }
+            else if (coord.X == 7 && coord.Y == 7)
+            {
+                return new BitmapImage(new Uri($"{uriPrefix}Star.png", UriKind.Absolute));
+            }
+            else
+            {
+                return nullImage;
+            }
+        }
+
+        private SolidColorBrush GetBonusColourFromCoord(Coord coord)
+        {
+            if (bonusLocations.TryGetValue(coord, out Bonus bonus))
+            {
+                return bonus switch
+                {
+                    Bonus.TripleWord => Brushes.Red,
+                    Bonus.DoubleWord => Brushes.LightPink,
+                    Bonus.TripleLetter => Brushes.DarkBlue,
+                    Bonus.DoubleLetter => Brushes.LightBlue,
+                    _ => null,
+                };
+            }
+            else
+            {
+                return new SolidColorBrush(Color.FromRgb(0x79, 0x97, 0xB9));
             }
         }
 
@@ -315,7 +338,7 @@ namespace Scrabble
         }
 
         //match an image object to one on the board
-        private Image FindImage(Image matchImage)
+        /*private Image FindImage(Image matchImage)
         {
             foreach (Border border in playGrid.Children)
             {
@@ -327,7 +350,7 @@ namespace Scrabble
                 }
             }
             return null;
-        }
+        }*/
 
         //Gets the letter represented by an Image
         private char GetLetterFromImage(Image image)
@@ -365,15 +388,41 @@ namespace Scrabble
             return new Coord(column, row);
         }
 
+        private Image GetImageFromCoord(Coord coord)
+        {
+            int index = coord.Y * 15 + coord.X;
+            Border border = (Border)playGrid.Children[index];
+            Viewbox viewbox = (Viewbox)border.Child;
+            return (Image)viewbox.Child;
+        }
+
         //Generates a Tile from an image
         private Tile GetTileFromImage(Image image)
         {
             return new Tile(GetLetterFromImage(image), GetGridCoord(image));
         }
 
+        private Orientation GetOrientation(List<Tile> tiles)
+        {
+            if (tiles[0].Coord.X == tiles[1].Coord.X)
+            {
+                //all x values should be the same
+                return Orientation.Vertical;
+            }
+            else if (tiles[0].Coord.Y == tiles[1].Coord.Y)
+            {
+                //all y values should be the same
+                return Orientation.Horizontal;
+            }
+            else
+            {
+                throw new ArgumentException(message: $"The contents of {nameof(tiles)} are arranged in an invalid way.", paramName: nameof(tiles));
+            }
+        }
+
         private bool CheckLetterLocation(List<Tile> tiles)
         {
-            if (players[0].numTurns == 0)
+            if (players[0].NumTurns == 0)
             {
                 bool centre = false;
                 foreach (Tile tile in tiles)
@@ -399,10 +448,10 @@ namespace Scrabble
             else
             {
                 int same;
-                if (tiles[0].Coord.X == tiles[1].Coord.X)
+                orientation = GetOrientation(tiles);
+                if (orientation == Orientation.Vertical)
                 {
                     //all x values should be the same
-                    orientation = Orientation.Vertical;
                     same = tiles[0].Coord.X;
                     foreach (Tile tile in tiles)
                     {
@@ -413,10 +462,9 @@ namespace Scrabble
                         }
                     }
                 }
-                else if (tiles[0].Coord.Y == tiles[1].Coord.Y)
+                else if (orientation == Orientation.Horizontal)
                 {
                     //all y values should be the same
-                    orientation = Orientation.Horizontal;
                     same = tiles[0].Coord.Y;
                     foreach (Tile tile in tiles)
                     {
@@ -464,9 +512,60 @@ namespace Scrabble
             }
             else
             {
-                sortedTiles = (List<Tile>)tiles.OrderBy(tile => tile.Coord.Y).ToList(); 
+                sortedTiles = tiles.OrderBy(tile => tile.Coord.Y).ToList(); 
             }
             return sortedTiles;
+        }
+
+        private void FinishTurn(object sender, RoutedEventArgs e)
+        {
+            if (CheckLetterLocation(turnTiles))
+            {
+                Word word = new Word(SortTiles(turnTiles, GetOrientation(turnTiles)));
+                currentPlayer.AddWord(word);    //add created word to the player's list of words
+                AddWordToPanel(word);   //add word to side panel
+
+                currentPlayer.IncrementTurns();
+
+                //lock letters in place
+                foreach (Tile tile in turnTiles)
+                {
+                    playedTiles.Add(tile);
+                    Image image = GetImageFromCoord(tile.Coord);
+                    int index = playGrid.Children.IndexOf((image.Parent as Viewbox).Parent as Border);
+                    Debug.WriteLine($"Finish turn index: {index}");
+                    image.AllowDrop = false;
+                    image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
+                }
+
+                //To work on
+                List<Tile> newTiles = letterPool.Take(7 - turnTiles.Count).ToList();
+                currentPlayer.ChangeTiles(turnTiles, newTiles);
+                //
+
+                turnTiles.Clear();
+            }
+        }
+
+        private void AddWordToPanel(Word word)
+        {
+            StackPanel stackPanel = new();
+            stackPanel.Orientation = Orientation.Horizontal;
+
+            Label label = new();
+            label.Content = word.ToString();
+            label.Style = (Style)FindResource("smallTextStyle");
+
+            Button button = new();
+            button.Content = "🔍";
+            ToolTip toolTip = new();
+            toolTip.Content = "Get definition";
+
+            button.ToolTip = toolTip;
+            stackPanel.Children.Add(label);
+            stackPanel.Children.Add(button);
+
+            wordList.Children.Add(stackPanel);
         }
     }
 }
