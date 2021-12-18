@@ -1,15 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -206,8 +200,15 @@ namespace Scrabble
             letterPool.RemoveRange(0, 7);
             currentPlayer = players[0];
 
-            //add user's tiles to the tile dock
-            foreach (Tile tile in players[0].Tiles)
+            //display the user's tiles on the screen
+            AddTilesToDock(currentPlayer);
+        }
+
+        //add user's tiles to the tile dock
+        private void AddTilesToDock(User user)
+        {
+            tileDock.Children.Clear();
+            foreach (Tile tile in user.Tiles)
             {
                 char letter = tile.Letter;
                 Image image = new();
@@ -218,15 +219,6 @@ namespace Scrabble
             }
         }
 
-        /*private void AddTilesToDock(User user)
-        {
-            int numNeeded = 7 - user.Tiles.Length;
-
-            for (int i = 0; i < numNeeded; i++)
-            {
-                
-            }
-        }*/
         private BitmapImage GetBonusImageFromCoord(Coord coord)
         {
             if (bonusLocations.TryGetValue(coord, out Bonus bonus))
@@ -538,12 +530,12 @@ namespace Scrabble
                     image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
                 }
 
-                //To work on
                 List<Tile> newTiles = letterPool.Take(7 - turnTiles.Count).ToList();
                 currentPlayer.ChangeTiles(turnTiles, newTiles);
-                //
 
                 turnTiles.Clear();
+
+                AddTilesToDock(currentPlayer);
             }
         }
 

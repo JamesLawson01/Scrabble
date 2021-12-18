@@ -49,15 +49,23 @@ namespace Scrabble
         //To work on
         public void ChangeTiles(List<Tile> oldTiles, List<Tile> newTiles)
         {
+            List<int> indices = new();
             foreach (Tile tile in Tiles)
             {
                 foreach (Tile oldTile in oldTiles)
                 {
-                    if (tile == oldTile)
+                    if (tile.Letter == oldTile.Letter)
                     {
-                        Debug.WriteLine("found matching tiles");
+                        indices.Add(Array.IndexOf(Tiles, tile));
+                        break;
                     }
                 }
+            }
+
+            foreach (int index in indices)
+            {
+                Tiles[index] = newTiles[0];
+                newTiles.RemoveAt(0);
             }
         }
     }
