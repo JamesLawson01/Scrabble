@@ -79,58 +79,23 @@ namespace Scrabble
         /// <returns>A list of Coords</returns>
         public List<Coord> GetSurroundingCoords()
         {
-            int xPlus1 = X + 1;
-            int xMinus1 = X - 1;
-            int yPlus1 = Y + 1;
-            int yMinus1 = Y - 1;
-            Debug.WriteLine(xPlus1);
-            Debug.WriteLine(xMinus1);
-            Debug.WriteLine(yPlus1);
-            Debug.WriteLine(yMinus1);
-
-            if (X == 0)
-            {
-                xMinus1 = X;
-            }
-            else if (X == 9)
-            {
-                xPlus1 = X;
-            }
-
-            if (Y == 0)
-            {
-                yMinus1 = Y;
-            }
-            else if (Y == 9)
-            {
-                yPlus1 = Y;
-            }
-
-            Debug.WriteLine("coord is " + ToString() + ", surrounding coords are: ");
-
             List<Coord> surroundingCoords = new();
-            if (new Coord(X, yPlus1) != this)
+            if (X > 0)
             {
-                surroundingCoords.Add(new Coord(X, yPlus1));
+                surroundingCoords.Add(new Coord(X - 1, Y));
             }
-            if (new Coord(X, yMinus1) != this)
+            if (X < 14)
             {
-                surroundingCoords.Add(new Coord(X, yMinus1));
+                surroundingCoords.Add(new Coord(X + 1, Y));
             }
-            if (new Coord(xPlus1, Y) != this)
+            if (Y > 0)
             {
-                surroundingCoords.Add(new Coord(xPlus1, Y));
+                surroundingCoords.Add(new Coord(X, Y - 1));
             }
-            if (new Coord(xMinus1, Y) != this)
+            if (Y < 14)
             {
-                surroundingCoords.Add(new Coord(xMinus1, Y));
+                surroundingCoords.Add(new Coord(X, Y + 1));
             }
-
-            foreach (Coord surroundingCoord in surroundingCoords)
-            {
-                Debug.WriteLine(surroundingCoord);
-            }
-
             return surroundingCoords;
         }
 

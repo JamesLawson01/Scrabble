@@ -83,7 +83,7 @@ namespace Scrabble
         };
 
         // Used when generating the Tiles. The space is used for the blank tiles
-        private const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ ";
+        private const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";// ";
 
         private const string uriPrefix = "pack://application:,,,/";
 
@@ -171,22 +171,21 @@ namespace Scrabble
             }
 
             //generate letters
-            for (int i=0; i<27; i++)
+            foreach (char letter in alphabet)
             {
-                int numToCreate = letterNums[alphabet[i]];
+                int numToCreate = letterNums[letter];
                 for (int j=0; j<numToCreate; j++)
                 {
-                    letterPool.Add(new Tile(alphabet[j]));
+                    letterPool.Add(new Tile(letter));
                 }
             }
 
             //shuffle
             int length = letterPool.Count;
-            for (int i = 0; i < length; i++) ;
             Random rnd = new();
             for (int i = 0; i < length; i++)        // for each letter in the list, swap it with another one
             {
-                int dest = rnd.Next(0, length - 1);
+                int dest = rnd.Next(0, length);
                 Tile shuffleTile = letterPool[dest];
                 letterPool[dest] = letterPool[i];
                 letterPool[i] = shuffleTile;
@@ -511,6 +510,8 @@ namespace Scrabble
 
         private void FinishTurn(object sender, RoutedEventArgs e)
         {
+            GetInterlinkedTiles(turnTiles, playedTiles);
+
             if (CheckLetterLocation(turnTiles))
             {
                 Word word = new Word(SortTiles(turnTiles, GetOrientation(turnTiles)));
@@ -525,12 +526,12 @@ namespace Scrabble
                     playedTiles.Add(tile);
                     Image image = GetImageFromCoord(tile.Coord);
                     int index = playGrid.Children.IndexOf((image.Parent as Viewbox).Parent as Border);
-                    Debug.WriteLine($"Finish turn index: {index}");
+                    //Debug.WriteLine($"Finish turn index: {index}");
                     image.AllowDrop = false;
                     image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
                 }
 
-                List<Tile> newTiles = letterPool.Take(7 - turnTiles.Count).ToList();
+                List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
                 currentPlayer.ChangeTiles(turnTiles, newTiles);
 
                 turnTiles.Clear();
@@ -558,6 +559,83 @@ namespace Scrabble
             stackPanel.Children.Add(button);
 
             wordList.Children.Add(stackPanel);
+        }
+
+        private List<Tile> GetInterlinkedTiles(List<Tile> checkTiles, List<Tile> previousTiles)
+        {
+            /*
+            //check if connected on end or in the middle
+            if (orientation == Orientation.Horizontal)
+            {
+                for (int i = sortedTiles[0].Coord.X - 1; i <= sortedTiles.Last().Coord.X + 1; i++)
+                {
+                    if (previousCoords.Contains(new Coord(i, checkTiles[0].Coord.Y)))
+                    {
+                        return true;
+                    }
+                }
+            }
+            else if (orientation == Orientation.Vertical)
+            {
+                for (int i = sortedTiles[0].Coord.Y - 1; i <= sortedTiles.Last().Coord.Y + 1; i++)
+                {
+                    if (previousCoords.Contains(new Coord(checkTiles[0].Coord.X, i)))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            //check if connected parrallel to another word
+
+
+
+            return false;
+            */
+
+            Orientation orientation = GetOrientation(checkTiles);
+            HashSet<Coord> checkCoords = new();
+            HashSet<Coord> previousCoords = new();
+
+            foreach (Tile tile in previousTiles)
+            {
+                previousCoords.Add(tile.Coord);
+            }
+            foreach (Tile tile in checkTiles)
+            {
+                checkCoords.Add(tile.Coord);
+            }
+
+            List<Coord> adjecentCoords = new List<Coord>();
+
+            foreach (Coord coord in checkCoords)
+            {
+                List<Coord> surroundingCoords = coord.GetSurroundingCoords();
+                foreach (Coord surroundingCoord in surroundingCoords)
+                {
+                    if (!checkCoords.Contains(surroundingCoord))
+                    {
+                        adjecentCoords.Add(surroundingCoord);
+                    }
+                }
+            }
+
+            List<Coord> interlinkingCoords = new();
+            List<Tile> interlinkingTiles = new();
+
+            foreach (Coord coord in adjecentCoords)
+            {
+                if (previousCoords.Contains(coord))
+                {
+                    interlinkingCoords.Add(coord);
+                }
+            }
+            foreach (Coord coord in interlinkingCoords)
+            {
+                interlinkingTiles.Add(previousTiles.Find(tile => tile.Coord == coord));
+            }
+
+            return interlinkingTiles;
         }
     }
 }

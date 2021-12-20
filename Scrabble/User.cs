@@ -57,6 +57,7 @@ namespace Scrabble
                     if (tile.Letter == oldTile.Letter)
                     {
                         indices.Add(Array.IndexOf(Tiles, tile));
+                        oldTiles.Remove(oldTile);
                         break;
                     }
                 }

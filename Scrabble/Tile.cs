@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Media;
 
 namespace Scrabble
 {
@@ -11,7 +12,18 @@ namespace Scrabble
         // The ? signifies that coord should be nullable
         public Coord? Coord { get; set; }
 
-        public Bonus LetterBonus { get; }
+        private Bonus letterBonus;
+        public Bonus LetterBonus
+        {
+            get => letterBonus;
+            set
+            {
+                if (value != Bonus.None)
+                {
+                    letterBonus = value;
+                }
+            }
+        }
 
         public Tile(char letter, Coord coord)
         {
@@ -30,5 +42,19 @@ namespace Scrabble
             return base.ToString() + ": " + Letter + ", " + Coord + ", " + LetterBonus;
         }
 
+        /*public Tile Clone()
+        {
+            Tile newTile;
+            if (Coord == null)
+            {
+                newTile = new Tile(Letter);
+            }
+            else
+            {
+                newTile = new Tile(Letter, Coord);
+            }
+            newTile.letterBonus = letterBonus;
+            return newTile;
+        }*/
     }
 }
