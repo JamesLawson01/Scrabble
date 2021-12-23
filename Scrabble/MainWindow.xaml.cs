@@ -308,7 +308,7 @@ namespace Scrabble
                 }
             }
 
-            bool validArrangement = CheckLetterLocation(turnTiles);
+            bool validArrangement = CheckLetterLocation(turnTiles, playedTiles);
             Debug.WriteLine(validArrangement);
 
             Word testWord = new Word(turnTiles);
@@ -379,6 +379,7 @@ namespace Scrabble
             return new Coord(column, row);
         }
 
+        //returns the image at a given coord
         private Image GetImageFromCoord(Coord coord)
         {
             int index = coord.Y * 15 + coord.X;
@@ -411,7 +412,7 @@ namespace Scrabble
             }
         }
 
-        private bool CheckLetterLocation(List<Tile> tiles)
+        private bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles)
         {
             if (players[0].NumTurns == 0)
             {
@@ -473,7 +474,14 @@ namespace Scrabble
 
                 //Check tiles are adjecent
                 List<Tile> sortedTiles = SortTiles(tiles, orientation);
-                for (int i=1; i<sortedTiles.Count; i++)
+
+                Word tempWord = IterateWord(new Word(sortedTiles), sortedTiles[0].Coord with { }, 1, orientation, previousTiles, tiles);
+
+                bool tryBool =  tempWord.word.All(letter => sortedTiles.Contains(letter) || previousTiles.Contains(letter));
+                return tryBool;
+
+
+                /*for (int i=1; i<sortedTiles.Count; i++)
                 {
                     if (orientation == Orientation.Vertical)
                     {
@@ -489,8 +497,7 @@ namespace Scrabble
                             return false;
                         }
                     }
-                }
-                return true;
+                }*/
             }
         }
 
@@ -510,14 +517,15 @@ namespace Scrabble
 
         private void FinishTurn(object sender, RoutedEventArgs e)
         {
-            GetInterlinkedTiles(turnTiles, playedTiles);
+            List<Word> words = GetInterLinkedWords(turnTiles, playedTiles);
 
-            if (CheckLetterLocation(turnTiles))
+            if (CheckLetterLocation(turnTiles, playedTiles))
             {
-                Word word = new Word(SortTiles(turnTiles, GetOrientation(turnTiles)));
-                currentPlayer.AddWord(word);    //add created word to the player's list of words
-                AddWordToPanel(word);   //add word to side panel
-
+                foreach (Word word in words)
+                {
+                    currentPlayer.AddWord(word);    //add created word to the player's list of words
+                    AddWordToPanel(word);   //add word to side panel
+                }
                 currentPlayer.IncrementTurns();
 
                 //lock letters in place
@@ -532,6 +540,7 @@ namespace Scrabble
                 }
 
                 List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
+                letterPool.RemoveRange(0, newTiles.Count); //to document
                 currentPlayer.ChangeTiles(turnTiles, newTiles);
 
                 turnTiles.Clear();
@@ -561,6 +570,7 @@ namespace Scrabble
             wordList.Children.Add(stackPanel);
         }
 
+        //returns all the Tiles that are directly connected to a letter placed on the current turn
         private List<Tile> GetInterlinkedTiles(List<Tile> checkTiles, List<Tile> previousTiles)
         {
             /*
@@ -593,10 +603,10 @@ namespace Scrabble
             return false;
             */
 
+            //gets relevent coords, to make it easier to check adjecency
             Orientation orientation = GetOrientation(checkTiles);
             HashSet<Coord> checkCoords = new();
             HashSet<Coord> previousCoords = new();
-
             foreach (Tile tile in previousTiles)
             {
                 previousCoords.Add(tile.Coord);
@@ -606,8 +616,8 @@ namespace Scrabble
                 checkCoords.Add(tile.Coord);
             }
 
+            //gets all adjecent coords
             List<Coord> adjecentCoords = new List<Coord>();
-
             foreach (Coord coord in checkCoords)
             {
                 List<Coord> surroundingCoords = coord.GetSurroundingCoords();
@@ -620,9 +630,8 @@ namespace Scrabble
                 }
             }
 
+            //filters out coords where a letter hasn't been placed
             List<Coord> interlinkingCoords = new();
-            List<Tile> interlinkingTiles = new();
-
             foreach (Coord coord in adjecentCoords)
             {
                 if (previousCoords.Contains(coord))
@@ -630,12 +639,157 @@ namespace Scrabble
                     interlinkingCoords.Add(coord);
                 }
             }
+
+            //converts the coords back to tiles
+            List<Tile> interlinkingTiles = new();
             foreach (Coord coord in interlinkingCoords)
             {
                 interlinkingTiles.Add(previousTiles.Find(tile => tile.Coord == coord));
             }
 
-            return interlinkingTiles;
+            //removes duplicates
+            return interlinkingTiles.Distinct().ToList();
+        }
+
+        private Word IterateWord(Word word, Coord coord, int change, Orientation direction, List<Tile> previousTiles, List<Tile> currentTiles)
+        {
+            Word returnWord;
+            if (change == 1)
+            {
+                returnWord = new(new List<Tile>() { currentTiles.Find(tile => tile.Coord == coord) });
+                if (returnWord.word[0] is null) ///changed from if (returnWord is null)
+                {
+                    returnWord = new(new List<Tile>() { previousTiles.Find(tile => tile.Coord == coord) });
+                }
+            }
+            else
+            {
+                returnWord = word;
+            }
+            //coord = returnWord.word[0].Coord with { };
+            bool loop = true;
+            while (loop)
+            {
+                if (direction == Orientation.Horizontal)
+                {
+                    coord.X += change;
+                }
+                else
+                {
+                    coord.Y += change;
+                }
+
+                Tile nextTile = previousTiles.Find(nextTile => nextTile.Coord == coord);
+                if (nextTile is null)
+                {
+                    nextTile = currentTiles.Find(tile => tile.Coord == coord);
+                }
+
+                if (nextTile is not null)
+                {
+                    if (change == 1)
+                    {
+                        returnWord.AppendWord(nextTile);
+                    }
+                    else if (change == -1)
+                    {
+                        returnWord.PrependWord(nextTile);
+                    }
+                    else
+                    {
+                        throw new ArgumentOutOfRangeException(paramName: nameof(change), message: "Only 1 or -1 is allowed");
+                    }
+                }
+                else
+                {
+                    loop = false;
+                }
+            }
+            return returnWord;
+        }
+
+        private List<Word> GetInterLinkedWords(List<Tile> checkTiles, List<Tile> previousTiles)
+        {
+            Orientation orientation = GetOrientation(checkTiles);
+            List<Tile> sortedTiles = SortTiles(checkTiles, orientation);
+            List<Tile> interlinkingTiles = GetInterlinkedTiles(checkTiles, previousTiles);
+            bool doneMainWord = false;
+
+            Word word;
+            List<Word> words = new();
+
+            if (interlinkingTiles.Count == 0)
+            {
+                words.Add(new Word(sortedTiles));
+                doneMainWord = true;
+            }
+            foreach (Tile tile in interlinkingTiles)
+            {
+                word = new(sortedTiles);
+
+                //Tile is part of created word
+                if (((orientation == Orientation.Vertical && tile.Coord.X == checkTiles[0].Coord.X) || (orientation == Orientation.Horizontal && tile.Coord.Y == checkTiles[0].Coord.Y)) && !doneMainWord)
+                {
+                    /*Coord nextCoord = new(checkTiles.Last().Coord.X, checkTiles.Last().Coord.Y);
+                    while (loop)
+                    {
+                        nextCoord.X += 1;
+                        Tile nextTile = previousTiles.Find(nextTile => nextTile.Coord == nextCoord);
+                        if (nextTile is not null)
+                        {
+                            word.AppendWord(nextTile);
+                        }
+                        else
+                        {
+                            loop = false;
+                        }
+                    }
+                    nextCoord = checkTiles[0].Coord;
+                    loop = true;
+                    while (loop)
+                    {
+                        nextCoord.X -= 1;
+                        Tile nextTile = previousTiles.Find(nextTile => nextTile.Coord == nextCoord);
+                        if (nextTile is not null)
+                        {
+                            word.PrependWord(nextTile);
+                        }
+                        else
+                        {
+                            loop = false;
+                        }
+                    }*/
+                    Coord coord = checkTiles[0].Coord with { }; // new(checkTiles.Last().Coord.X, checkTiles.Last().Coord.Y);
+                    word = IterateWord(word, coord, 1, orientation, previousTiles, checkTiles);
+
+                    coord = checkTiles[0].Coord with { }; //new(checkTiles[0].Coord.X, checkTiles[0].Coord.Y);
+                    word = IterateWord(word, coord, -1, orientation, previousTiles, checkTiles);
+                    words.Add(word);
+                    doneMainWord = true;
+                }
+                //Tile forms a new word by crossing over the created word
+                else if (orientation == Orientation.Horizontal && tile.Coord.Y != checkTiles[0].Coord.Y)
+                {
+                    Coord coord = tile.Coord with { };
+                    word = IterateWord(word, coord, 1, Orientation.Vertical, previousTiles, checkTiles);
+                    coord = tile.Coord with { };
+                    word = IterateWord(word, coord, -1, Orientation.Vertical, previousTiles, checkTiles);
+                    words.Add(word);
+                }
+                else if (orientation == Orientation.Vertical && tile.Coord.X != checkTiles[0].Coord.X)
+                {
+                    Coord coord = tile.Coord with { };
+                    word = IterateWord(word, coord, 1, Orientation.Horizontal, previousTiles, checkTiles);
+                    coord = tile.Coord with { };
+                    word = IterateWord(word, coord, -1, Orientation.Horizontal, previousTiles, checkTiles);
+                    words.Add(word);
+                }
+            }
+            if (!doneMainWord)
+            {
+                words.Insert(0, new(sortedTiles));
+            }
+            return words;
         }
     }
 }

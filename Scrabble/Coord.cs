@@ -6,8 +6,8 @@ namespace Scrabble
 {
     public record Coord
     {
-        public int X { get; }
-        public int Y { get; }
+        public int X { get; set; }
+        public int Y { get; set; }
 
         public Coord(int x, int y)
         {

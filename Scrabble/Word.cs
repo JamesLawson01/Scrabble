@@ -51,5 +51,15 @@ namespace Scrabble
             }
             return str.ToLower();
         }
+
+        public void AppendWord(Tile tile)
+        {
+            word.Add(tile);
+        }
+
+        public void PrependWord(Tile tile)
+        {
+            word.Insert(0, tile);
+        }
     }
 }
