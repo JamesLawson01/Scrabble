@@ -394,6 +394,7 @@ namespace Scrabble
             return new Tile(GetLetterFromImage(image), GetGridCoord(image));
         }
 
+        //returns the way a group of tiles are oriented
         private Orientation GetOrientation(List<Tile> tiles)
         {
             if (tiles.Count < 2)
@@ -401,7 +402,7 @@ namespace Scrabble
                 // one or zero tiles placed, so orientation doesn't matter
                 return Orientation.Horizontal;
             }
-            if (tiles[0].Coord.X == tiles[1].Coord.X)
+            else if (tiles[0].Coord.X == tiles[1].Coord.X)
             {
                 //all x values should be the same
                 return Orientation.Vertical;
@@ -417,6 +418,7 @@ namespace Scrabble
             }
         }
 
+        //Ensures letters are placed in valid locations
         private bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles)
         {
             if (tiles.Count == 0)
@@ -477,7 +479,7 @@ namespace Scrabble
                 return false;
             }
 
-            //Check tiles are adjecent
+            //Check tiles are adjacent
             List<Tile> sortedTiles = SortTiles(tiles, orientation);
             List<Tile> interlinkingTiles = GetInterlinkedTiles(tiles, previousTiles);
 
@@ -487,6 +489,7 @@ namespace Scrabble
             return tryBool;
         }
 
+        //Sorts tiles vertically downwards or across to the right
         private List<Tile> SortTiles(List<Tile> tiles, Orientation orientation)
         {
             List<Tile> sortedTiles;
@@ -501,6 +504,7 @@ namespace Scrabble
             return sortedTiles;
         }
 
+        //Called when the button to finish a turn is clicked
         private void FinishTurn(object sender, RoutedEventArgs e)
         {
             List<Word> words = GetInterLinkedWords(turnTiles, playedTiles);
@@ -535,6 +539,7 @@ namespace Scrabble
             }
         }
 
+        //Adds a word to the panel of created words
         private void AddWordToPanel(Word word)
         {
             StackPanel stackPanel = new();
@@ -607,7 +612,7 @@ namespace Scrabble
             return interlinkingTiles.Distinct().ToList();
         }
 
-        //iterates forwars and backwards in a given direction, starting from a given coord, finding all letters to make a word
+        //iterates forwards and backwards in a given direction, starting from a given coord, finding all letters to make a word
         private Word IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles, List<Tile> currentTiles)
         {
             Coord startCoord = coord with { };  // store starting point for use when going backwards
@@ -619,7 +624,7 @@ namespace Scrabble
                 {
                     // start tile
                     returnWord = new(new List<Tile>() { currentTiles.Find(tile => tile.Coord == coord) });
-                    if (returnWord.word[0] is null) ///changed from if (returnWord is null)
+                    if (returnWord.word[0] is null)
                     {
                         returnWord = new(new List<Tile>() { previousTiles.Find(tile => tile.Coord == coord) });
                     }
@@ -673,6 +678,7 @@ namespace Scrabble
             return returnWord;
         }
 
+        //Returns all the words created on a turn
         private List<Word> GetInterLinkedWords(List<Tile> checkTiles, List<Tile> previousTiles)
         {
             Orientation orientation = GetOrientation(checkTiles);
@@ -695,7 +701,7 @@ namespace Scrabble
                 //Tile is part of main word
                 if (((orientation == Orientation.Vertical && tile.Coord.X == checkTiles[0].Coord.X) || (orientation == Orientation.Horizontal && tile.Coord.Y == checkTiles[0].Coord.Y)) && !doneMainWord)
                 {
-                    Coord coord = checkTiles[0].Coord with { }; // new(checkTiles.Last().Coord.X, checkTiles.Last().Coord.Y);
+                    Coord coord = checkTiles[0].Coord with { };
                     word = IterateWord(coord, orientation, previousTiles, checkTiles);
                     doneMainWord = true;
                 }
