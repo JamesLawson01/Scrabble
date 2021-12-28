@@ -515,6 +515,7 @@ namespace Scrabble
                 {
                     currentPlayer.AddWord(word);    //add created word to the player's list of words
                     AddWordToPanel(word);   //add word to side panel
+                    word.GetPopularity();
                 }
                 currentPlayer.IncrementTurns();
 
