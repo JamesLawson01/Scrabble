@@ -109,5 +109,10 @@ namespace Scrabble
             Coord coord = new(rnd.Next(0, 14), rnd.Next(0, 14));
             return coord;
         }
+
+        public bool IsOutsideBounds()
+        {
+            return (X < 0 || X > 14 || Y < 0 || Y > 14);
+        }
     }
 }

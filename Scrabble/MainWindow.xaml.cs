@@ -515,7 +515,7 @@ namespace Scrabble
                 {
                     currentPlayer.AddWord(word);    //add created word to the player's list of words
                     AddWordToPanel(word);   //add word to side panel
-                    word.GetPopularity();
+                    //word.GetPopularity();
                 }
                 currentPlayer.IncrementTurns();
 
@@ -537,6 +537,11 @@ namespace Scrabble
                 turnTiles.Clear();
 
                 AddTilesToDock(currentPlayer);
+            }
+
+            foreach (Word word in (players[1] as AI).GenerateAllWords(playedTiles))
+            {
+                ;
             }
         }
 

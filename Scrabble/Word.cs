@@ -22,11 +22,39 @@ namespace Scrabble
 
         public List<Tile> word { get; }
 
-        public Bonus WordBonus { get; }
+        public Bonus wordBonus;
+        public Bonus WordBonus
+        {
+            get => wordBonus;
+            set
+            {
+                if (value != Bonus.None)
+                {
+                    wordBonus = value;
+                }
+            }
+        }
 
         public Word(List<Tile> word)
         {
             this.word = word;
+        }
+
+        public Word(Tile tile)
+        {
+            this.word = new() { tile };
+        }
+
+        public Word Clone()
+        {
+            List<Tile> tiles = new List<Tile>();
+            foreach (Tile tile in this.word)
+            {
+                tiles.Add(tile.Clone());
+            }
+            Word word =  new(tiles);
+            word.WordBonus = WordBonus;
+            return word;
         }
 
         public bool Validate()

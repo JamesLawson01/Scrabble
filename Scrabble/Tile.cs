@@ -42,7 +42,7 @@ namespace Scrabble
             return base.ToString() + ": " + Letter + ", " + Coord + ", " + LetterBonus;
         }
 
-        /*public Tile Clone()
+        public Tile Clone()
         {
             Tile newTile;
             if (Coord == null)
@@ -51,10 +51,10 @@ namespace Scrabble
             }
             else
             {
-                newTile = new Tile(Letter, Coord);
+                newTile = new Tile(Letter, Coord with { });
             }
             newTile.letterBonus = letterBonus;
             return newTile;
-        }*/
+        }
     }
 }
