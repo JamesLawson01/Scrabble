@@ -28,7 +28,7 @@ namespace Scrabble
 
         public List<Word> GenerateAllWords(List<Tile> previousTiles)
         {
-            List<Word> WordLocations = new();
+            List<Word> wordLocations = new();
 
             //gets all words of all lengths with all possible starting coords
             for (int i=0; i<15; i++)
@@ -59,7 +59,7 @@ namespace Scrabble
                         }
                         if (add && numBlanks > 0 && numBlanks <= 7)
                         {
-                            WordLocations.Add(word);
+                            wordLocations.Add(word);
                         }
                     }
                 }
@@ -73,7 +73,7 @@ namespace Scrabble
             while (loop)
             {
                 removed = false;
-                Word word = WordLocations[t];
+                Word word = wordLocations[t];
                 List<Tile> boundingTiles = new();
                 Orientation orientation = word.GetOrientation();
 
@@ -107,7 +107,7 @@ namespace Scrabble
                         Tile boundingTile = previousTiles.Find(tile => tile.Coord == boundingCoord);
                         if (boundingTile is not null)
                         {
-                            WordLocations.Remove(word);
+                            wordLocations.Remove(word);
                             removed = true;
                             break;
                         }
@@ -120,7 +120,7 @@ namespace Scrabble
                     t++;
                 }
                 //reached the end of the words list
-                if (t >= WordLocations.Count)
+                if (t >= wordLocations.Count)
                 {
                     loop = false;
                 }
@@ -136,21 +136,34 @@ namespace Scrabble
                 permutations.AddRange(Permutate(combination));
             }
 
-
-            /*List<Word> words = new();
-            foreach (Word location in WordLocations)
+            //generate all possible words
+            List<Word> words = new();
+            foreach (Word location in wordLocations)
             {
-                List<Tile> blanks = location.word.FindAll(tile => tile.Letter == ' ');
                 foreach (Word permutation in permutations)
                 {
+                    Word newWord = location.Clone();
+                    Word tempPermutation = permutation.Clone();
+                    List<Tile> blanks = newWord.word.FindAll(tile => tile.Letter == ' ');
                     if (permutation.word.Count == blanks.Count)
                     {
-                        List<Tile> newTiles = new();
+                        int i = 0;
+                        foreach (Tile tile in location.word)
+                        {
+                            if (tile.Letter == ' ')
+                            {
+                                newWord.word[i] = tempPermutation.word[0];
+                                tempPermutation.word.RemoveAt(0);
+                                newWord.word[i].Coord = tile.Coord; ///to document.
+                            }
+                            i++;
+                        }
+                        words.Add(newWord);
                     }
                 }
-            }*/
+            }
 
-            return WordLocations;
+            return wordLocations;
         }
 
         private List<Word> IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles)
