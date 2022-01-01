@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Security.Policy;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace Scrabble
 {
@@ -86,6 +87,30 @@ namespace Scrabble
             }
             return str.ToLower();
         }
+
+        public  Orientation GetOrientation()
+        {
+            if (word.Count < 2)
+            {
+                // one or zero tiles placed, so orientation doesn't matter
+                return Orientation.Horizontal;
+            }
+            else if (word[0].Coord.X == word[1].Coord.X)
+            {
+                //all x values should be the same
+                return Orientation.Vertical;
+            }
+            else if (word[0].Coord.Y == word[1].Coord.Y)
+            {
+                //all y values should be the same
+                return Orientation.Horizontal;
+            }
+            else
+            {
+                throw new ArgumentException(message: $"The contents of {nameof(word)} are arranged in an invalid way.", paramName: nameof(word));
+            }
+        }
+
 
         public void AppendWord(Tile tile)
         {
