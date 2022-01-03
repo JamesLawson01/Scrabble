@@ -144,6 +144,7 @@ namespace Scrabble
                 {
                     Word newWord = location.Clone();
                     Word tempPermutation = permutation.Clone();
+                    List<Tile> lettersPlaced = new();
                     List<Tile> blanks = newWord.word.FindAll(tile => tile.Letter == ' ');
                     if (permutation.word.Count == blanks.Count)
                     {
@@ -153,6 +154,7 @@ namespace Scrabble
                             if (tile.Letter == ' ')
                             {
                                 newWord.word[i] = tempPermutation.word[0];
+                                lettersPlaced.Add(new Tile(tempPermutation.word[0].Letter, tile.Coord));
                                 tempPermutation.word.RemoveAt(0);
                                 newWord.word[i].Coord = tile.Coord;
                             }
@@ -161,7 +163,7 @@ namespace Scrabble
                         //check word is in dictionary
                         if (newWord.Validate())
                         {
-                            List<Word> newWords = Word.GetInterLinkedWords(newWord.word, previousTiles);
+                            List<Word> newWords = Word.GetInterLinkedWords(lettersPlaced, previousTiles);
                             bool invalid = false;
                             foreach (Word tempNewWord in newWords)
                             {
