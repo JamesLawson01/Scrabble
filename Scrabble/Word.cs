@@ -24,16 +24,38 @@ namespace Scrabble
 
         public List<Tile> word { get; }
 
-        public Bonus wordBonus;
-        public Bonus WordBonus
+        public int WordMultiplier
         {
-            get => wordBonus;
-            set
+            get
             {
-                if (value != Bonus.None)
+                int multiplier = 1;
+                foreach (Tile tile in word)
                 {
-                    wordBonus = value;
+                    if (tile.LetterBonus == Bonus.DoubleWord)
+                    {
+                        multiplier *= 2;
+                    }
+                    else if (tile.LetterBonus == Bonus.TripleWord)
+                    {
+                        multiplier *= 3;
+                    }
                 }
+                return multiplier;
+            }
+        }
+
+        public int GetValue
+        {
+            get
+            {
+                int score = 0;
+                foreach (Tile tile in word)
+                {
+                    score += tile.GetValue;
+                }
+                score *= WordMultiplier;
+                return score;
+
             }
         }
 

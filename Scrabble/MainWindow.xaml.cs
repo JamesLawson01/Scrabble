@@ -455,6 +455,14 @@ namespace Scrabble
             {
                 ;
             }
+
+            foreach (Word word in words)
+            {
+                foreach (Tile tile in word.word)
+                {
+                    tile.Coord.RemoveBonus();
+                }
+            }
         }
 
 

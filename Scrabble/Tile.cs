@@ -58,13 +58,6 @@ namespace Scrabble
                     throw new InvalidOperationException(message: "Coord is null");
                 }
             }
-            /*set
-            {
-                if (value != Bonus.None)
-                {
-                    letterBonus = value;
-                }
-            }*/
         }
 
         public int GetValue

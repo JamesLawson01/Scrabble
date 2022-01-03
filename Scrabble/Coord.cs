@@ -198,5 +198,10 @@ namespace Scrabble
             return (X < 0 || X > 14 || Y < 0 || Y > 14);
         }
 
+        public void RemoveBonus()
+        {
+            bonusLocations.Remove(this);
+        }
+
     }
 }
