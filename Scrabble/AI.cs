@@ -137,7 +137,7 @@ namespace Scrabble
             }
 
             //generate all possible words
-            List<Word> words = new();
+            List<List<Word>> words = new();
             foreach (Word location in wordLocations)
             {
                 foreach (Word permutation in permutations)
@@ -154,11 +154,29 @@ namespace Scrabble
                             {
                                 newWord.word[i] = tempPermutation.word[0];
                                 tempPermutation.word.RemoveAt(0);
-                                newWord.word[i].Coord = tile.Coord; ///to document.
+                                newWord.word[i].Coord = tile.Coord;
                             }
                             i++;
                         }
-                        words.Add(newWord);
+                        //check word is in dictionary
+                        if (newWord.Validate())
+                        {
+                            List<Word> newWords = Word.GetInterLinkedWords(newWord.word, previousTiles);
+                            bool invalid = false;
+                            foreach (Word tempNewWord in newWords)
+                            {
+                                if (!tempNewWord.Validate())
+                                {
+                                    invalid = true;
+                                    break;
+                                }
+                            }
+                            if (!invalid)
+                            {
+                                words.Add(newWords);
+                            }
+                            words.Add(newWords);
+                        }
                     }
                 }
             }

@@ -308,7 +308,7 @@ namespace Scrabble
                 }
             }
 
-            bool validArrangement = CheckLetterLocation(turnTiles, playedTiles);
+            bool validArrangement = Word.CheckLetterLocation(turnTiles, playedTiles, currentPlayer);
             Debug.WriteLine(validArrangement);
 
             Word testWord = new Word(turnTiles);
@@ -394,32 +394,79 @@ namespace Scrabble
             return new Tile(GetLetterFromImage(image), GetGridCoord(image));
         }
 
-        //returns the way a group of tiles are oriented
-        private Orientation GetOrientation(List<Tile> tiles)
+        //Called when the button to finish a turn is clicked
+        private void FinishTurn(object sender, RoutedEventArgs e)
         {
-            if (tiles.Count < 2)
+            List<Word> words = Word.GetInterLinkedWords(turnTiles, playedTiles);
+
+            if (Word.CheckLetterLocation(turnTiles, playedTiles, currentPlayer) && words.Count > 0)
             {
-                // one or zero tiles placed, so orientation doesn't matter
-                return Orientation.Horizontal;
+                foreach (Word word in words)
+                {
+                    currentPlayer.AddWord(word);    //add created word to the player's list of words
+                    AddWordToPanel(word);   //add word to side panel
+                    //word.GetPopularity();
+                }
+                currentPlayer.IncrementTurns();
+
+                //lock letters in place
+                foreach (Tile tile in turnTiles)
+                {
+                    playedTiles.Add(tile);
+                    Image image = GetImageFromCoord(tile.Coord);
+                    int index = playGrid.Children.IndexOf((image.Parent as Viewbox).Parent as Border);
+                    //Debug.WriteLine($"Finish turn index: {index}");
+                    image.AllowDrop = false;
+                    image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
+                }
+
+                List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
+                letterPool.RemoveRange(0, newTiles.Count); //to document
+                currentPlayer.ChangeTiles(turnTiles, newTiles);
+
+                turnTiles.Clear();
+
+                AddTilesToDock(currentPlayer);
             }
-            else if (tiles[0].Coord.X == tiles[1].Coord.X)
+
+            foreach (Word word in (players[1] as AI).GenerateAllWords(playedTiles))
             {
-                //all x values should be the same
-                return Orientation.Vertical;
-            }
-            else if (tiles[0].Coord.Y == tiles[1].Coord.Y)
-            {
-                //all y values should be the same
-                return Orientation.Horizontal;
-            }
-            else
-            {
-                throw new ArgumentException(message: $"The contents of {nameof(tiles)} are arranged in an invalid way.", paramName: nameof(tiles));
+                ;
             }
         }
 
+
+        //Adds a word to the panel of created words
+        private void AddWordToPanel(Word word)
+        {
+            StackPanel stackPanel = new();
+            stackPanel.Orientation = Orientation.Horizontal;
+
+            Label label = new();
+            label.Content = word.ToString();
+            label.Style = (Style)FindResource("smallTextStyle");
+
+            Button button = new();
+            button.Content = "🔍";
+            ToolTip toolTip = new();
+            toolTip.Content = "Get definition";
+
+            button.ToolTip = toolTip;
+            stackPanel.Children.Add(label);
+            stackPanel.Children.Add(button);
+
+            wordList.Children.Add(stackPanel);
+        }
+
+
+
+
+
+
+
+
         //Ensures letters are placed in valid locations
-        private bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles)
+        /*private bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles)
         {
             if (tiles.Count == 0)
             {
@@ -485,12 +532,36 @@ namespace Scrabble
 
             Word tempWord = IterateWord(sortedTiles[0].Coord with { }, orientation, previousTiles, tiles);
 
-            bool tryBool =  sortedTiles.All(letter => tempWord.word.Contains(letter)) && (interlinkingTiles.Count >= 1 || isFirstTurn);
+            bool tryBool = sortedTiles.All(letter => tempWord.word.Contains(letter)) && (interlinkingTiles.Count >= 1 || isFirstTurn);
             return tryBool;
-        }
+        }*/
+
+        //returns the way a group of tiles are oriented
+        /*private Orientation GetOrientation(List<Tile> tiles)
+        {
+            if (tiles.Count < 2)
+            {
+                // one or zero tiles placed, so orientation doesn't matter
+                return Orientation.Horizontal;
+            }
+            else if (tiles[0].Coord.X == tiles[1].Coord.X)
+            {
+                //all x values should be the same
+                return Orientation.Vertical;
+            }
+            else if (tiles[0].Coord.Y == tiles[1].Coord.Y)
+            {
+                //all y values should be the same
+                return Orientation.Horizontal;
+            }
+            else
+            {
+                throw new ArgumentException(message: $"The contents of {nameof(tiles)} are arranged in an invalid way.", paramName: nameof(tiles));
+            }
+        }*/
 
         //Sorts tiles vertically downwards or across to the right
-        private List<Tile> SortTiles(List<Tile> tiles, Orientation orientation)
+        /*private List<Tile> SortTiles(List<Tile> tiles, Orientation orientation)
         {
             List<Tile> sortedTiles;
             if (orientation == Orientation.Horizontal)
@@ -499,76 +570,13 @@ namespace Scrabble
             }
             else
             {
-                sortedTiles = tiles.OrderBy(tile => tile.Coord.Y).ToList(); 
+                sortedTiles = tiles.OrderBy(tile => tile.Coord.Y).ToList();
             }
             return sortedTiles;
-        }
-
-        //Called when the button to finish a turn is clicked
-        private void FinishTurn(object sender, RoutedEventArgs e)
-        {
-            List<Word> words = GetInterLinkedWords(turnTiles, playedTiles);
-
-            if (CheckLetterLocation(turnTiles, playedTiles) && words.Count > 0)
-            {
-                foreach (Word word in words)
-                {
-                    currentPlayer.AddWord(word);    //add created word to the player's list of words
-                    AddWordToPanel(word);   //add word to side panel
-                    //word.GetPopularity();
-                }
-                currentPlayer.IncrementTurns();
-
-                //lock letters in place
-                foreach (Tile tile in turnTiles)
-                {
-                    playedTiles.Add(tile);
-                    Image image = GetImageFromCoord(tile.Coord);
-                    int index = playGrid.Children.IndexOf((image.Parent as Viewbox).Parent as Border);
-                    //Debug.WriteLine($"Finish turn index: {index}");
-                    image.AllowDrop = false;
-                    image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
-                }
-
-                List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
-                letterPool.RemoveRange(0, newTiles.Count); //to document
-                currentPlayer.ChangeTiles(turnTiles, newTiles);
-
-                turnTiles.Clear();
-
-                AddTilesToDock(currentPlayer);
-            }
-
-            foreach (Word word in (players[1] as AI).GenerateAllWords(playedTiles))
-            {
-                ;
-            }
-        }
-
-        //Adds a word to the panel of created words
-        private void AddWordToPanel(Word word)
-        {
-            StackPanel stackPanel = new();
-            stackPanel.Orientation = Orientation.Horizontal;
-
-            Label label = new();
-            label.Content = word.ToString();
-            label.Style = (Style)FindResource("smallTextStyle");
-
-            Button button = new();
-            button.Content = "🔍";
-            ToolTip toolTip = new();
-            toolTip.Content = "Get definition";
-
-            button.ToolTip = toolTip;
-            stackPanel.Children.Add(label);
-            stackPanel.Children.Add(button);
-
-            wordList.Children.Add(stackPanel);
-        }
+        }*/
 
         //returns all the Tiles that are directly connected to a letter placed on the current turn
-        private List<Tile> GetInterlinkedTiles(List<Tile> checkTiles, List<Tile> previousTiles)
+        /*private List<Tile> GetInterlinkedTiles(List<Tile> checkTiles, List<Tile> previousTiles)
         {
             //gets relevent coords, to make it easier to check adjecency
             Orientation orientation = GetOrientation(checkTiles);
@@ -616,10 +624,10 @@ namespace Scrabble
 
             //removes duplicates
             return interlinkingTiles.Distinct().ToList();
-        }
+        }*/
 
         //iterates forwards and backwards in a given direction, starting from a given coord, finding all letters to make a word
-        private Word IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles, List<Tile> currentTiles)
+        /*private Word IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles, List<Tile> currentTiles)
         {
             Coord startCoord = coord with { };  // store starting point for use when going backwards
             Word returnWord = new(new List<Tile>());
@@ -682,10 +690,10 @@ namespace Scrabble
                 }
             }
             return returnWord;
-        }
+        }*/
 
         //Returns all the words created on a turn
-        private List<Word> GetInterLinkedWords(List<Tile> checkTiles, List<Tile> previousTiles)
+        /*private List<Word> GetInterLinkedWords(List<Tile> checkTiles, List<Tile> previousTiles)
         {
             Orientation orientation = GetOrientation(checkTiles);
             List<Tile> sortedTiles = SortTiles(checkTiles, orientation);
@@ -738,6 +746,6 @@ namespace Scrabble
                 words.Insert(0, new(sortedTiles));
             }
             return words;
-        }
+        }*/
     }
 }

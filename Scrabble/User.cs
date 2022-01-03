@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Windows.Controls;
 
 namespace Scrabble
 {
     public class User
     {
         //words the user has played
-        public List<Word> words { get; }
+        public List<Word> Words { get; }
 
         //user's name
         public string Name { get; }
@@ -28,7 +30,7 @@ namespace Scrabble
                 throw new ArgumentException(paramName: nameof(tiles), message: "Must be an array of length 7");
             }
 
-            words = new();
+            Words = new();
             Tiles = tiles;
         }
 
@@ -38,7 +40,7 @@ namespace Scrabble
         /// <param name="word"></param>
         public void AddWord(Word word)
         {
-            words.Add(word);
+            Words.Add(word);
         }
 
         public void IncrementTurns()
@@ -69,5 +71,6 @@ namespace Scrabble
                 newTiles.RemoveAt(0);
             }
         }
+
     }
 }
