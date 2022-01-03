@@ -15,7 +15,7 @@ namespace Scrabble
     /// </summary>
     public partial class MainWindow : Window
     {
-        public static readonly Dictionary<Coord, Bonus> bonusLocations = new()
+        /*public static readonly Dictionary<Coord, Bonus> bonusLocations = new()
         {
             { new Coord(0, 0), Bonus.TripleWord },
             { new Coord(7, 0), Bonus.TripleWord },
@@ -80,7 +80,7 @@ namespace Scrabble
             { new Coord(8, 12), Bonus.DoubleLetter },
             { new Coord(3, 14), Bonus.DoubleLetter },
             { new Coord(11, 14), Bonus.DoubleLetter },
-        };
+        };*/
 
         // Used when generating the Tiles. The space is used for the blank tiles
         private const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";// ";
@@ -220,7 +220,22 @@ namespace Scrabble
 
         private BitmapImage GetBonusImageFromCoord(Coord coord)
         {
-            if (bonusLocations.TryGetValue(coord, out Bonus bonus))
+            if (coord.X == 7 && coord.Y == 7)
+            {
+                return new BitmapImage(new Uri($"{uriPrefix}Star.png", UriKind.Absolute));
+            }
+
+            Bonus bonus = coord.Bonus;
+            return bonus switch
+            {
+                Bonus.TripleWord => new BitmapImage(new Uri($"{uriPrefix}3x word.png", UriKind.Absolute)),
+                Bonus.DoubleWord => new BitmapImage(new Uri($"{uriPrefix}2x word.png", UriKind.Absolute)),
+                Bonus.TripleLetter => new BitmapImage(new Uri($"{uriPrefix}3x letter.png", UriKind.Absolute)),
+                Bonus.DoubleLetter => new BitmapImage(new Uri($"{uriPrefix}2x letter.png", UriKind.Absolute)),
+                _ => nullImage,
+            };
+
+            /*if (bonusLocations.TryGetValue(coord, out Bonus bonus))
             {
                 return bonus switch
                 {
@@ -231,19 +246,26 @@ namespace Scrabble
                     _ => nullImage,
                 };
             }
-            else if (coord.X == 7 && coord.Y == 7)
-            {
-                return new BitmapImage(new Uri($"{uriPrefix}Star.png", UriKind.Absolute));
-            }
             else
             {
                 return nullImage;
-            }
+            }*/
         }
 
         private SolidColorBrush GetBonusColourFromCoord(Coord coord)
         {
-            if (bonusLocations.TryGetValue(coord, out Bonus bonus))
+            Bonus bonus = coord.Bonus;
+
+            return bonus switch
+            {
+                Bonus.TripleWord => Brushes.Red,
+                Bonus.DoubleWord => Brushes.LightPink,
+                Bonus.TripleLetter => Brushes.DarkBlue,
+                Bonus.DoubleLetter => Brushes.LightBlue,
+                _ => new SolidColorBrush(Color.FromRgb(0x79, 0x97, 0xB9)),
+            };
+
+            /*if (bonusLocations.TryGetValue(coord, out Bonus bonus))
             {
                 return bonus switch
                 {
@@ -257,7 +279,7 @@ namespace Scrabble
             else
             {
                 return new SolidColorBrush(Color.FromRgb(0x79, 0x97, 0xB9));
-            }
+            }*/
         }
 
         //start drag

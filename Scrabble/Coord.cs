@@ -6,6 +6,89 @@ namespace Scrabble
 {
     public record Coord
     {
+        private static readonly Dictionary<Coord, Bonus> bonusLocations = new()
+        {
+            { new Coord(0, 0), Bonus.TripleWord },
+            { new Coord(7, 0), Bonus.TripleWord },
+            { new Coord(14, 0), Bonus.TripleWord },
+            { new Coord(0, 7), Bonus.TripleWord },
+            { new Coord(14, 7), Bonus.TripleWord },
+            { new Coord(0, 14), Bonus.TripleWord },
+            { new Coord(7, 14), Bonus.TripleWord },
+            { new Coord(14, 14), Bonus.TripleWord },
+
+            { new Coord(1, 1), Bonus.DoubleWord },
+            { new Coord(2, 2), Bonus.DoubleWord },
+            { new Coord(3, 3), Bonus.DoubleWord },
+            { new Coord(4, 4), Bonus.DoubleWord },
+            { new Coord(1, 13), Bonus.DoubleWord },
+            { new Coord(2, 12), Bonus.DoubleWord },
+            { new Coord(3, 11), Bonus.DoubleWord },
+            { new Coord(4, 10), Bonus.DoubleWord },
+            { new Coord(13, 1), Bonus.DoubleWord },
+            { new Coord(12, 2), Bonus.DoubleWord },
+            { new Coord(11, 3), Bonus.DoubleWord },
+            { new Coord(10, 4), Bonus.DoubleWord },
+            { new Coord(13, 13), Bonus.DoubleWord },
+            { new Coord(12, 12), Bonus.DoubleWord },
+            { new Coord(11, 11), Bonus.DoubleWord },
+            { new Coord(10, 10), Bonus.DoubleWord },
+
+            { new Coord(5, 1), Bonus.TripleLetter },
+            { new Coord(9, 1), Bonus.TripleLetter },
+            { new Coord(1, 5), Bonus.TripleLetter },
+            { new Coord(5, 5), Bonus.TripleLetter },
+            { new Coord(9, 5), Bonus.TripleLetter },
+            { new Coord(13, 5), Bonus.TripleLetter },
+            { new Coord(1, 9), Bonus.TripleLetter },
+            { new Coord(5, 9), Bonus.TripleLetter },
+            { new Coord(9, 9), Bonus.TripleLetter },
+            { new Coord(13, 9), Bonus.TripleLetter },
+            { new Coord(5, 13), Bonus.TripleLetter },
+            { new Coord(9, 13), Bonus.TripleLetter },
+
+            { new Coord(3, 0), Bonus.DoubleLetter },
+            { new Coord(11, 0), Bonus.DoubleLetter },
+            { new Coord(6, 2), Bonus.DoubleLetter },
+            { new Coord(8, 2), Bonus.DoubleLetter },
+            { new Coord(0, 3), Bonus.DoubleLetter },
+            { new Coord(7, 3), Bonus.DoubleLetter },
+            { new Coord(14, 3), Bonus.DoubleLetter },
+            { new Coord(2, 6), Bonus.DoubleLetter },
+            { new Coord(6, 6), Bonus.DoubleLetter },
+            { new Coord(8, 6), Bonus.DoubleLetter },
+            { new Coord(12, 6), Bonus.DoubleLetter },
+            { new Coord(3, 7), Bonus.DoubleLetter },
+            { new Coord(11, 7), Bonus.DoubleLetter },
+            { new Coord(2, 8), Bonus.DoubleLetter },
+            { new Coord(6, 8), Bonus.DoubleLetter },
+            { new Coord(8, 8), Bonus.DoubleLetter },
+            { new Coord(12, 8), Bonus.DoubleLetter },
+            { new Coord(0, 11), Bonus.DoubleLetter },
+            { new Coord(7, 11), Bonus.DoubleLetter },
+            { new Coord(14, 11), Bonus.DoubleLetter },
+            { new Coord(6, 12), Bonus.DoubleLetter },
+            { new Coord(8, 12), Bonus.DoubleLetter },
+            { new Coord(3, 14), Bonus.DoubleLetter },
+            { new Coord(11, 14), Bonus.DoubleLetter },
+        };
+
+        public Bonus Bonus
+        { 
+            get
+            {
+                bool hasBonus = bonusLocations.TryGetValue(this, out Bonus bonus);
+                if (hasBonus)
+                {
+                    return bonus;
+                }
+                else
+                {
+                    return Bonus.None;
+                }
+            }
+        }
+
         public int X { get; set; }
         public int Y { get; set; }
 
@@ -114,5 +197,6 @@ namespace Scrabble
         {
             return (X < 0 || X > 14 || Y < 0 || Y > 14);
         }
+
     }
 }

@@ -137,7 +137,7 @@ namespace Scrabble
             }
 
             //generate all possible words
-            List<List<Word>> words = new();
+            List<(List<Tile>, List<Word>)> words = new();
             foreach (Word location in wordLocations)
             {
                 foreach (Word permutation in permutations)
@@ -175,7 +175,7 @@ namespace Scrabble
                             }
                             if (!invalid)
                             {
-                                words.Add(newWords);
+                                words.Add((lettersPlaced, newWords));
                             }
                         }
                     }
