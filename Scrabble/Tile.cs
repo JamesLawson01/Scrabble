@@ -74,10 +74,10 @@ namespace Scrabble
                 {
                     score *= 3;
                 }
-                else if (LetterBonus == Bonus.DoubleWord || LetterBonus == Bonus.TripleWord)
+                /*else if (LetterBonus == Bonus.DoubleWord || LetterBonus == Bonus.TripleWord)
                 {
                     throw new ArgumentOutOfRangeException(paramName: nameof(LetterBonus));
-                }
+                }*/
 
                 return score;
             }

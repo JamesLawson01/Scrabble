@@ -24,9 +24,10 @@ namespace Scrabble
         public AI(string username, Tile[] tiles, Difficulty difficulty) : base(username, tiles)
         {
             this.difficulty = difficulty;
+            //this.playerType = PlayerType.AI;
         }
 
-        public List<Word> GenerateAllWords(List<Tile> previousTiles)
+        public List<Tile> GetTilesToPlace(List<Tile> previousTiles)
         {
             List<Word> wordLocations = new();
 
@@ -137,7 +138,7 @@ namespace Scrabble
             }
 
             //generate all possible words
-            List<(List<Tile>, List<Word>)> words = new();
+            List<(List<Tile>, int)> words = new();
             foreach (Word location in wordLocations)
             {
                 foreach (Word permutation in permutations)
@@ -164,6 +165,7 @@ namespace Scrabble
                         if (newWord.Validate())
                         {
                             List<Word> newWords = Word.GetInterLinkedWords(lettersPlaced, previousTiles);
+                            int score = 0;
                             bool invalid = false;
                             foreach (Word tempNewWord in newWords)
                             {
@@ -172,17 +174,29 @@ namespace Scrabble
                                     invalid = true;
                                     break;
                                 }
+                                score += tempNewWord.GetValue;
                             }
                             if (!invalid)
                             {
-                                words.Add((lettersPlaced, newWords));
+                                words.Add((lettersPlaced, score));
                             }
                         }
                     }
                 }
             }
 
-            return wordLocations;
+            (List<Tile>, int) bestMove = words[0];
+
+            foreach ((List<Tile>, int) tuple in words)
+            {
+                if (tuple.Item2 > bestMove.Item2)
+                {
+                    bestMove = tuple;
+                }
+            }
+
+            return bestMove.Item1;
+            
         }
 
         private List<Word> IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles)

@@ -8,6 +8,12 @@ namespace Scrabble
 {
     public class User
     {
+        /*public enum PlayerType
+        {
+            User,
+            AI
+        }*/
+
         //words the user has played
         public List<Word> Words { get; }
 
@@ -17,9 +23,10 @@ namespace Scrabble
         //tiles the user can play
         public Tile[] Tiles { get; }
 
+        //public PlayerType playerType = PlayerType.User;
+
         private int numTurns;
         public int NumTurns { get { return numTurns; } }
-
 
         public User(string username, Tile[] tiles)
         {

@@ -130,6 +130,8 @@ namespace Scrabble
 
         private List<Tile> turnTiles = new();
 
+        private bool isFirstTurn = true;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -211,11 +213,16 @@ namespace Scrabble
             {
                 char letter = tile.Letter;
                 Image image = new();
-                image.Source = new BitmapImage(new Uri($"{uriPrefix}letters/{letter}.png", UriKind.Absolute));
+                image.Source = GetImageSourceFromLetter(letter);
                 //image.AllowDrop = true;
                 image.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(DragLetter);
                 tileDock.Children.Add(image);
             }
+        }
+
+        private BitmapImage GetImageSourceFromLetter(char letter)
+        {
+            return new BitmapImage(new Uri($"{uriPrefix}letters/{letter}.png", UriKind.Absolute));
         }
 
         private BitmapImage GetBonusImageFromCoord(Coord coord)
@@ -330,11 +337,11 @@ namespace Scrabble
                 }
             }
 
-            bool validArrangement = Word.CheckLetterLocation(turnTiles, playedTiles, currentPlayer);
+            /*bool validArrangement = Word.CheckLetterLocation(turnTiles, playedTiles, currentPlayer);
             Debug.WriteLine(validArrangement);
 
             Word testWord = new Word(turnTiles);
-            Debug.WriteLine(testWord.Validate());
+            Debug.WriteLine(testWord.Validate());*/
 
         }
 
@@ -419,9 +426,30 @@ namespace Scrabble
         //Called when the button to finish a turn is clicked
         private void FinishTurn(object sender, RoutedEventArgs e)
         {
-            List<Word> words = Word.GetInterLinkedWords(turnTiles, playedTiles);
+            FinishTurn();
+        }
 
-            if (Word.CheckLetterLocation(turnTiles, playedTiles, currentPlayer) && words.Count > 0)
+        private void FinishTurn()
+        {
+            Debug.WriteLine("");
+            Debug.WriteLine(players[0] is User);
+            Debug.WriteLine(players[1] is User);
+            Debug.WriteLine(players[0] is AI);
+            Debug.WriteLine(players[1] is AI);
+
+            List<Word> words;
+            if (currentPlayer is AI ai)
+            {
+                turnTiles = ai.GetTilesToPlace(playedTiles);
+                words = Word.GetInterLinkedWords(turnTiles, playedTiles);
+            }
+            else
+            {
+                words = Word.GetInterLinkedWords(turnTiles, playedTiles);
+            }
+
+
+            if (Word.CheckLetterLocation(turnTiles, playedTiles, isFirstTurn) && words.Count > 0)
             {
                 foreach (Word word in words)
                 {
@@ -436,10 +464,13 @@ namespace Scrabble
                 {
                     playedTiles.Add(tile);
                     Image image = GetImageFromCoord(tile.Coord);
-                    int index = playGrid.Children.IndexOf((image.Parent as Viewbox).Parent as Border);
-                    //Debug.WriteLine($"Finish turn index: {index}");
                     image.AllowDrop = false;
                     image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
+
+                    if (currentPlayer is AI)
+                    {
+                        image.Source = GetImageSourceFromLetter(tile.Letter);
+                    }
                 }
 
                 List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
@@ -448,12 +479,11 @@ namespace Scrabble
 
                 turnTiles.Clear();
 
-                AddTilesToDock(currentPlayer);
-            }
-
-            foreach (Word word in (players[1] as AI).GenerateAllWords(playedTiles))
-            {
-                ;
+                //update letters available on screen
+                if (currentPlayer is not AI)
+                {
+                    AddTilesToDock(currentPlayer);
+                }
             }
 
             foreach (Word word in words)
@@ -463,6 +493,24 @@ namespace Scrabble
                     tile.Coord.RemoveBonus();
                 }
             }
+
+            isFirstTurn = false;
+            SwitchPlayer();
+            if (currentPlayer is AI)
+            {
+                FinishTurn();
+            }
+        }
+
+        private void SwitchPlayer()
+        {
+            int index = players.IndexOf(currentPlayer);
+            index++;
+            if (index > players.Count - 1)
+            {
+                index = 0;
+            }
+            currentPlayer = players[index];
         }
 
 

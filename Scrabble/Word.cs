@@ -77,7 +77,7 @@ namespace Scrabble
                 tiles.Add(tile.Clone());
             }
             Word word =  new(tiles);
-            word.WordBonus = WordBonus;
+            //word.WordBonus = WordBonus;
             return word;
         }
 
@@ -215,17 +215,15 @@ namespace Scrabble
 
 
         //Ensures letters are placed in valid locations
-        public static bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles, User user)
+        public static bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles, bool isFirstTurn)
         {
             if (tiles.Count == 0)
             {
                 return false;
             }
 
-            bool isFirstTurn = false;
-            if (user.NumTurns == 0)
+            if (isFirstTurn)
             {
-                isFirstTurn = true;
                 bool centre = false;
                 foreach (Tile tile in tiles)
                 {
