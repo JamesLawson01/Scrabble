@@ -434,13 +434,22 @@ namespace Scrabble
             foreach (Tile tile in interlinkingTiles)
             {
                 Word word;
+                bool duplicate = false;
 
                 //Tile is part of main word
-                if (((orientation == Orientation.Vertical && tile.Coord.X == checkTiles[0].Coord.X) || (orientation == Orientation.Horizontal && tile.Coord.Y == checkTiles[0].Coord.Y)) && !doneMainWord)
+                if ((orientation == Orientation.Vertical && tile.Coord.X == checkTiles[0].Coord.X) || (orientation == Orientation.Horizontal && tile.Coord.Y == checkTiles[0].Coord.Y))
                 {
-                    Coord coord = checkTiles[0].Coord with { };
-                    word = IterateWord(coord, orientation, previousTiles, checkTiles);
-                    doneMainWord = true;
+                    if (!doneMainWord)
+                    {
+                        Coord coord = checkTiles[0].Coord with { };
+                        word = IterateWord(coord, orientation, previousTiles, checkTiles);
+                        doneMainWord = true;
+                    }
+                    else
+                    {
+                        duplicate = true;
+                        word = null;
+                    }
                 }
                 //Tile forms a new word by crossing over the created word
                 else
@@ -456,9 +465,19 @@ namespace Scrabble
                         oppositeOrientation = Orientation.Vertical;
                     }
                     word = IterateWord(coord, oppositeOrientation, previousTiles, checkTiles);
+
+                    //check for duplicates
+                    foreach (Word listWord in words)
+                    {
+                        if (listWord.ToString() == word.ToString() && listWord.word[0].Coord == word.word[0].Coord && listWord.GetOrientation() == word.GetOrientation())
+                        {
+                            duplicate = true;
+                        }
+                        
+                    }
                 }
 
-                if (word.word.Count >= 2)
+                if (!duplicate && word.word.Count >= 2)
                 {
                     words.Add(word);
                 }
