@@ -17,6 +17,13 @@ namespace Scrabble
             High
         }
 
+        private Dictionary<Difficulty, double> difficultyThreshold = new()
+        {
+            { Difficulty.Medium, 0.0013 },
+            { Difficulty.Low, 0.0056 },
+            { Difficulty.High, 100 }
+        };
+
         private readonly Difficulty difficulty;
 
         //private List<Word> temp;
@@ -27,7 +34,7 @@ namespace Scrabble
             //this.playerType = PlayerType.AI;
         }
 
-        public List<Tile> GetTilesToPlace(List<Tile> previousTiles)
+        public async List<Tile> GetTilesToPlace(List<Tile> previousTiles)
         {
             List<Word> wordLocations = new();
 
@@ -185,18 +192,38 @@ namespace Scrabble
                 }
             }
 
-            (List<Tile>, int) bestMove = words[0];
-
-            foreach ((List<Tile>, int) tuple in words)
+            if (difficulty == Difficulty.High)
             {
-                if (tuple.Item2 > bestMove.Item2)
+                (List<Tile>, int) bestMove = words[0];
+
+                foreach ((List<Tile>, int) tuple in words)
                 {
-                    bestMove = tuple;
+                    if (tuple.Item2 > bestMove.Item2)
+                    {
+                        bestMove = tuple;
+                    }
+                }
+
+                return bestMove.Item1;
+            }
+            else
+            {
+                List<(List<Tile>, int)> sortedWords = words.OrderBy(tuple => tuple.Item2).ToList();
+                bool valid = false;
+                int i = 0;
+
+                while (valid == false)
+                {
+                    Task<float> popularity = (new Word(sortedWords[i].Item1)).GetPopularity();
+                    if (await popularity > difficultyThreshold[difficulty])
+                    {
+                        valid = true;
+                        return sortedWords[i].Item1;
+                    }
                 }
             }
 
-            return bestMove.Item1;
-            
+
         }
 
         private List<Word> IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles)
@@ -233,7 +260,26 @@ namespace Scrabble
                     word.AppendWord(tile);
                     if (word.word.Count > 1)
                     {
+                        /*bool add = false;
+                        int numBlanks = 0;
+                        foreach (Tile wordTile in word.word)
+                        {
+                            if (tile.Letter != ' ')
+                            {
+                                add = true;
+                            }
+                            else
+                            {
+                                numBlanks++;
+                            }
+                        }
+                        if (add && numBlanks > 0 && numBlanks <= 7)
+                        {
+                            returnWords.Add(word.Clone());
+                        }*/
+
                         returnWords.Add(word.Clone());
+
                     }
                 }
             }

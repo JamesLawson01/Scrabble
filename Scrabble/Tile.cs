@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Scrabble
 {
@@ -57,6 +58,14 @@ namespace Scrabble
                 {
                     throw new InvalidOperationException(message: "Coord is null");
                 }
+            }
+        }
+
+        public BitmapImage Image
+        {
+            get
+            {
+                return new BitmapImage(new Uri($"pack://application:,,,/letters/{Letter}.png", UriKind.Absolute));
             }
         }
 

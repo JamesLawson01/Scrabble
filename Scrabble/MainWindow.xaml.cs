@@ -214,17 +214,17 @@ namespace Scrabble
             {
                 char letter = tile.Letter;
                 Image image = new();
-                image.Source = GetImageSourceFromLetter(letter);
+                image.Source = tile.Image;
                 //image.AllowDrop = true;
                 image.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(DragLetter);
                 tileDock.Children.Add(image);
             }
         }
 
-        private BitmapImage GetImageSourceFromLetter(char letter)
+        /*private BitmapImage GetImageSourceFromLetter(char letter)
         {
             return new BitmapImage(new Uri($"{uriPrefix}letters/{letter}.png", UriKind.Absolute));
-        }
+        }*/
 
         private BitmapImage GetBonusImageFromCoord(Coord coord)
         {
@@ -470,7 +470,7 @@ namespace Scrabble
 
                     if (currentPlayer is AI)
                     {
-                        image.Source = GetImageSourceFromLetter(tile.Letter);
+                        image.Source = tile.Image;
                     }
                 }
 
