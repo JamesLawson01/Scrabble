@@ -129,9 +129,9 @@ namespace Scrabble
 
             //Create the player and AI
             players = new();
-            players.Add(new User(givenName, letterPool.GetRange(0, 7).ToArray()));
+            players.Add(new User(givenName, letterPool.GetRange(0, 7)));
             letterPool.RemoveRange(0, 7);
-            players.Add(new AI(givenName, letterPool.GetRange(0, 7).ToArray(), AI.Difficulty.Medium));
+            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.High));
             letterPool.RemoveRange(0, 7);
             currentPlayer = players[0];
 
@@ -350,12 +350,6 @@ namespace Scrabble
 
         private async Task FinishTurnAsync()
         {
-            Debug.WriteLine("");
-            Debug.WriteLine(players[0] is User);
-            Debug.WriteLine(players[1] is User);
-            Debug.WriteLine(players[0] is AI);
-            Debug.WriteLine(players[1] is AI);
-
             List<Word> words;
             if (currentPlayer is AI ai)
             {
@@ -376,9 +370,8 @@ namespace Scrabble
                     currentPlayer.AddWord(word);    //add created word to the player's list of words
                     AddWordToPanel(word);   //add word to side panel
                     //word.GetPopularity();
-                    score += word.GetValue;
+                    score += word.Value;
                 }
-                currentPlayer.IncrementTurns();
 
                 //lock letters in place
                 foreach (Tile tile in turnTiles)
@@ -394,19 +387,27 @@ namespace Scrabble
                     }
                 }
 
+                currentPlayer.IncrementTurns();
+
                 List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
                 letterPool.RemoveRange(0, newTiles.Count); //to document
                 currentPlayer.ChangeTiles(turnTiles, newTiles);
 
                 turnTiles.Clear();
 
-                //update letters available on screen
+                //update UI
                 if (currentPlayer is not AI)
                 {
                     AddTilesToDock(currentPlayer);
+                    userScoreLabel.Content = currentPlayer.Score;
+                }
+                else
+                {
+                    computerScoreLabel.Content = currentPlayer.Score;
                 }
             }
 
+            //remove used bonuses
             foreach (Word word in words)
             {
                 foreach (Tile tile in word.word)
@@ -433,7 +434,6 @@ namespace Scrabble
             }
             currentPlayer = players[index];
         }
-
 
         //Adds a word to the panel of created words
         private void AddWordToPanel(Word word)

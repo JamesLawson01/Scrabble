@@ -29,7 +29,7 @@ namespace Scrabble
 
         //private List<Word> temp;
 
-        public AI(string username, Tile[] tiles, Difficulty difficulty) : base(username, tiles)
+        public AI(string username, List<Tile> tiles, Difficulty difficulty) : base(username, tiles)
         {
             this.difficulty = difficulty;
             //this.playerType = PlayerType.AI;
@@ -203,7 +203,7 @@ namespace Scrabble
                                     invalid = true;
                                     break;
                                 }
-                                score += tempNewWord.GetValue;
+                                score += tempNewWord.Value;
                             }
                             if (!invalid)
                             {

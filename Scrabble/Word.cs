@@ -43,7 +43,7 @@ namespace Scrabble
             }
         }
 
-        public int GetValue
+        public int Value
         {
             get
             {

@@ -13,20 +13,23 @@ namespace Scrabble
 
         //user's name
         public string Name { get; }
-
+        
         //tiles the user can play
-        public Tile[] Tiles { get; }
+        public List<Tile> Tiles { get; }
 
         private int numTurns;
         public int NumTurns { get { return numTurns; } }
 
-        public User(string username, Tile[] tiles)
+        private int score;
+        public int Score { get { return score; } }
+
+        public User(string username, List<Tile> tiles)
         {
             Name = username;
 
-            if (tiles.Length != 7)
+            if (tiles.Count != 7)
             {
-                throw new ArgumentException(paramName: nameof(tiles), message: "Must be an array of length 7");
+                throw new ArgumentException(paramName: nameof(tiles), message: "Must be a list of length 7");
             }
 
             Words = new();
@@ -40,6 +43,7 @@ namespace Scrabble
         public void AddWord(Word word)
         {
             Words.Add(word);
+            score += word.Value;
         }
 
         public void IncrementTurns()
@@ -47,27 +51,15 @@ namespace Scrabble
             numTurns++;
         }
 
+        //removes tiles that have been placed and adds new ones
         public void ChangeTiles(List<Tile> oldTiles, List<Tile> newTiles)
         {
-            List<int> indices = new();
-            foreach (Tile tile in Tiles)
+            foreach (Tile oldTile in oldTiles)
             {
-                foreach (Tile oldTile in oldTiles)
-                {
-                    if (tile.Letter == oldTile.Letter)
-                    {
-                        indices.Add(Array.IndexOf(Tiles, tile));
-                        oldTiles.Remove(oldTile);
-                        break;
-                    }
-                }
+                Tiles.Remove(Tiles.Find(tile => tile.Letter == oldTile.Letter));
             }
 
-            foreach (int index in indices)
-            {
-                Tiles[index] = newTiles[0];
-                newTiles.RemoveAt(0);
-            }
+            Tiles.AddRange(newTiles);
         }
 
     }

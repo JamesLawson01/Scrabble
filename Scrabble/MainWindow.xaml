@@ -38,11 +38,11 @@
         <WrapPanel Grid.Column="1" Grid.Row="0" Margin="5" HorizontalAlignment="Right" Orientation="Horizontal">
             <StackPanel Orientation="Horizontal">
                 <Label Content="Your Score:"/>
-                <Label Content="46"/>
+                <Label x:Name="userScoreLabel" Content="0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Label Content="Computer's Score:"/>
-                <Label Content="49"/>
+                <Label x:Name="computerScoreLabel" Content="0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal">
                 <Label Content="Time:"/>
