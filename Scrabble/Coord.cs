@@ -99,53 +99,6 @@ namespace Scrabble
         }
 
         //https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/statements-expressions-operators/how-to-define-value-equality-for-a-type
-        /*
-        public override bool Equals(object obj) => this.Equals(obj as Coord);
-
-        public bool Equals(Coord coord)
-        {
-            if (coord is null)
-            {
-                return false;
-            }
-
-            // Optimization for a common success case.
-            if (Object.ReferenceEquals(this, coord))
-            {
-                return true;
-            }
-
-            // If run-time types are not exactly the same, return false.
-            if (GetType() != coord.GetType())
-            {
-                return false;
-            }
-
-            // Return true if the fields match.
-            // Note that the base class is not invoked because it is
-            // System.Object, which defines Equals as reference equality.
-            return (X == coord.X) && (Y == coord.Y);
-        }
-
-        public override int GetHashCode() => (X, Y).GetHashCode();
-
-        public static bool operator ==(Coord lhs, Coord rhs)
-        {
-            if (lhs is null)
-            {
-                if (rhs is null)
-                {
-                    return true;
-                }
-
-                // Only the left side is null.
-                return false;
-            }
-            // Equals handles case of null on right side.
-            return lhs.Equals(rhs);
-        }
-
-        public static bool operator !=(Coord lhs, Coord rhs) => !(lhs == rhs);*/
 
         /// <summary>
         /// Provides a string representation of the Coord object, used for debugging purposes

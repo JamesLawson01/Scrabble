@@ -17,8 +17,6 @@ namespace Scrabble
     {
         private const string sowpodsLocation = @"Sowpods.txt";
 
-        //private static bool previouslyValidated = false;
-
         private static HashSet<string> sowpods;
 
         private static readonly HttpClient client = new();

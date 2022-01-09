@@ -57,17 +57,6 @@
             </Border>
         </Viewbox>
         
-        <!-- Words played panel 
-        <Border Style="{StaticResource borderStyle}" Grid.Column="1" Grid.Row="1" Margin="5,10,10,10" MaxWidth="500" HorizontalAlignment="Right">
-            <ItemsControl>
-                <Label Content="Words made" Style="{StaticResource bigTextStyle}"/>
-                <ScrollViewer Height="{Binding ElementName=mypanel, Path=ActualHeight}">
-                    <ItemsControl x:Name="wordList"/>
-                </ScrollViewer>
-            </ItemsControl>
-        </Border>
-        -->
-
         <!-- Words played panel -->
         <Border Style="{StaticResource borderStyle}" Grid.Column="1" Grid.Row="1" Margin="5,10,10,10" MaxWidth="500" HorizontalAlignment="Right">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">

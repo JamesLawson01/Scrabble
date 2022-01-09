@@ -162,56 +162,6 @@ namespace Scrabble
                     }
                 }*/
             }
-
-            /*//generate all possible words
-            List<(List<Tile>, int)> words = new();
-            foreach (Word location in wordLocations)
-            {
-                foreach (Word permutation in permutations)
-                {
-                    Word newWord = location.Clone();
-                    Word tempPermutation = permutation.Clone();
-                    //List<Tile> lettersPlaced = new();
-                    List<Tile> blanks = newWord.word.FindAll(tile => tile.Letter == ' ');
-                    if (permutation.word.Count == blanks.Count)
-                    {
-                        List<Tile> lettersPlaced = new();
-                        int i = 0;
-                        foreach (Tile tile in location.word)
-                        {
-                            if (tile.Letter == ' ')
-                            {
-                                newWord.word[i] = tempPermutation.word[0];
-                                lettersPlaced.Add(new Tile(tempPermutation.word[0].Letter, tile.Coord));
-                                tempPermutation.word.RemoveAt(0);
-                                newWord.word[i].Coord = tile.Coord;
-                            }
-                            i++;
-                        }
-                        //check word is in dictionary
-                        if (newWord.Validate())
-                        {
-                            List<Word> newWords = Word.GetInterLinkedWords(lettersPlaced, previousTiles);
-                            int score = 0;
-                            bool invalid = false;
-                            foreach (Word tempNewWord in newWords)
-                            {
-                                if (!tempNewWord.Validate())
-                                {
-                                    invalid = true;
-                                    break;
-                                }
-                                score += tempNewWord.GetValue;
-                            }
-                            if (!invalid)
-                            {
-                                words.Add((lettersPlaced, score));
-                            }
-                        }
-                    }
-                }
-            }*/
-
             
             //generate all possible words using parallel processing
             ConcurrentBag<(List<Tile>, int)> parallelWords = new();
@@ -230,15 +180,6 @@ namespace Scrabble
                         int j = 0;
                         foreach (Tile tile in location.word)
                         {
-                            /*if (tile.Letter == ' ')
-                            {
-                                newWord.word[i] = tempPermutation.word[0];
-                                lettersPlaced.Add(new Tile(tempPermutation.word[0].Letter, tile.Coord));
-                                tempPermutation.word.RemoveAt(0);
-                                newWord.word[i].Coord = tile.Coord;
-                            }
-                            i++;*/
-
                             if (tile.Letter == ' ')
                             {
                                 newWord.word[i] = permutation.word[j];
@@ -376,121 +317,6 @@ namespace Scrabble
             return returnWords;
         }
 
-        /*private List<Word> IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles)
-        {
-            Coord startCoord = coord with { };  // store starting point for use when going backwards
-            List<Word> returnWordsForwards = new List<Word>();
-            List<Word> returnWordsBackwards = new List<Word>();
-            Word word;
-            bool skip = false;
-
-            for (int change = 1; change >= -1; change -= 2)
-            {
-                // start tile
-                word = new(new List<Tile>() { previousTiles.Find(tile => tile.Coord == startCoord) });
-
-                bool loop = true;
-                while (loop)
-                {
-                    coord = IterateCoord(coord, change, direction);
-
-                    //try and get the next tile along
-                    Tile nextTile = previousTiles.Find(nextTile => nextTile.Coord == coord);
-
-                    //add tile to word
-                    if (nextTile is null && skip != true)
-                    {
-                        skip = false;
-                        if (change == 1)
-                        {
-                            returnWordsForwards.Add(word.Clone());
-                        }
-                        else if (change == -1)
-                        {
-                            returnWordsBackwards.Insert(0, word.Clone());
-                        }
-                        else
-                        {
-                            throw new ArgumentOutOfRangeException(paramName: nameof(change), message: "Only 1 or -1 is allowed");
-                        }
-                    }
-                    else if (nextTile is not null) //end of word reached
-                    {
-                        skip = true;
-                    }
-
-                    if (coord.IsOutsideBounds())
-                    {
-                        loop = false;
-                    }
-                    else
-                    {
-                        if (change == 1)
-                        {
-                            if (nextTile is null)
-                            {
-                                word.AppendWord(new Tile(' ', coord with { }));
-                            }
-                            else
-                            {
-                                word.AppendWord(nextTile);
-                            }
-                        }
-                        else if (change == -1)
-                        {
-                            if (nextTile is null)
-                            {
-                                word.PrependWord(new Tile(' ', coord with { }));
-                            }
-                            else
-                            {
-                                word.PrependWord(nextTile);
-                            }
-                        }
-                        else
-                        {
-                            throw new ArgumentOutOfRangeException(paramName: nameof(change), message: "Only 1 or -1 is allowed");
-                        }
-                    }
-                }
-            }
-
-            //merge forwards and backwards words
-            List<Word> returnWords = new List<Word>();
-
-            foreach (Word word1 in returnWordsForwards)
-            {
-                foreach (Word word2 in returnWordsBackwards)
-                {
-                    if (word1.word[1] is null)
-                    {
-                        returnWords.Add(word2);
-                    }
-                    if (word2.word.Last() is null)
-                    {
-                        returnWords.Add(word1);
-                    }
-
-                    returnWords.Add(new Word(word2.word.Concat(word1.word).Distinct().ToList()));
-                }
-            }
-
-            return returnWords;
-        }*/
-
-        /*private Coord IterateCoord(Coord coord, int change, Orientation direction)
-        {
-            if (direction == Orientation.Horizontal)
-            {
-                coord.X += change;
-            }
-            else
-            {
-                coord.Y += change;
-            }
-            return coord;
-        }*/
-
         private Coord IterateCoord(Coord coord, Orientation direction)
         {
             if (direction == Orientation.Horizontal)
@@ -503,33 +329,6 @@ namespace Scrabble
             }
             return coord;
         }
-
-        /*private List<Word> Permutate(Word input, ref List<Word> permutations)
-        {
-            if (input.word.Count == 1)
-            {
-                //permutations = new List<Word>();
-                permutations.Add(input.Clone());
-                return new List<Word>() { input.Clone() };
-            }
-            else
-            {
-                foreach (Tile tile in input.word)
-                {
-                    Word shorterWord = new(input.word);
-                    shorterWord.word.Remove(tile);
-                    List<Word> depthPermutations = Permutate(shorterWord, ref permutations);
-                    foreach (Word permutation in depthPermutations)
-                    {
-                        permutations.Add(permutation.Clone());
-                        permutation.word.Insert(0, tile);
-                        permutations.Add(permutation.Clone());
-                    }
-                    return depthPermutations;
-                }
-                return new();
-            }
-        }*/
 
         private List<Word> Combinations(Word input)
         {
