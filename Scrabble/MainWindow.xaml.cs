@@ -88,7 +88,7 @@ namespace Scrabble
 
         private const string uriPrefix = "pack://application:,,,/";
 
-        private readonly Dictionary<char, int> letterNums = new()
+        private static readonly Dictionary<char, int> letterNums = new()
         {
             { 'A', 9 },
             { 'B', 2 },
@@ -425,12 +425,12 @@ namespace Scrabble
         }
 
         //Called when the button to finish a turn is clicked
-        private void FinishTurn(object sender, RoutedEventArgs e)
+        private async void FinishTurnAsync(object sender, RoutedEventArgs e)
         {
-            FinishTurn();
+            await FinishTurnAsync();
         }
 
-        private void FinishTurn()
+        private async Task FinishTurnAsync()
         {
             Debug.WriteLine("");
             Debug.WriteLine(players[0] is User);
@@ -441,7 +441,7 @@ namespace Scrabble
             List<Word> words;
             if (currentPlayer is AI ai)
             {
-                turnTiles = ai.GetTilesToPlace(playedTiles);
+                turnTiles = await ai.GetTilesToPlaceAsync(playedTiles);
                 words = Word.GetInterLinkedWords(turnTiles, playedTiles);
             }
             else
@@ -452,11 +452,13 @@ namespace Scrabble
 
             if (Word.CheckLetterLocation(turnTiles, playedTiles, isFirstTurn) && words.Count > 0)
             {
+                int score = 0;
                 foreach (Word word in words)
                 {
                     currentPlayer.AddWord(word);    //add created word to the player's list of words
                     AddWordToPanel(word);   //add word to side panel
                     //word.GetPopularity();
+                    score += word.GetValue;
                 }
                 currentPlayer.IncrementTurns();
 
@@ -499,7 +501,7 @@ namespace Scrabble
             SwitchPlayer();
             if (currentPlayer is AI)
             {
-                FinishTurn();
+                await FinishTurnAsync();
             }
         }
 

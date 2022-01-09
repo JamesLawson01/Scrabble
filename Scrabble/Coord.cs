@@ -200,7 +200,14 @@ namespace Scrabble
 
         public void RemoveBonus()
         {
-            bonusLocations.Remove(this);
+            try
+            {
+                bonusLocations.Remove(this);
+            }
+            catch
+            {
+                throw;
+            }
         }
 
     }

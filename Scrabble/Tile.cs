@@ -10,7 +10,7 @@ namespace Scrabble
     #nullable enable
     public class Tile
     {
-        private readonly Dictionary<char, int> letterValues = new()
+        private static readonly Dictionary<char, int> letterValues = new()
         {
             { 'A', 1 },
             { 'B', 3 },
@@ -112,7 +112,7 @@ namespace Scrabble
         public Tile Clone()
         {
             Tile newTile;
-            if (Coord == null)
+            if (Coord is null)
             {
                 newTile = new Tile(Letter);
             }

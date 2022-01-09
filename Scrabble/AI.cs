@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,9 +20,9 @@ namespace Scrabble
 
         private Dictionary<Difficulty, double> difficultyThreshold = new()
         {
-            { Difficulty.Medium, 0.0013 },
-            { Difficulty.Low, 0.0056 },
-            { Difficulty.High, 100 }
+            { Difficulty.Medium, 1.2E-06 },
+            { Difficulty.Low, 5.0E-05 },
+            { Difficulty.High, 0}
         };
 
         private readonly Difficulty difficulty;
@@ -34,7 +35,7 @@ namespace Scrabble
             //this.playerType = PlayerType.AI;
         }
 
-        public async List<Tile> GetTilesToPlace(List<Tile> previousTiles)
+        public async Task<List<Tile>> GetTilesToPlaceAsync(List<Tile> previousTiles)
         {
             List<Word> wordLocations = new();
 
@@ -142,9 +143,27 @@ namespace Scrabble
             foreach (Word combination in combinations)
             {
                 permutations.AddRange(Permutate(combination));
+
+                /*foreach (Word newPermutation in Permutate(combination))
+                {
+                    //remove duplicate permutations caused by having several letters that are the same
+                    bool duplicate = false;
+                    foreach (Word permutation in permutations)
+                    {
+                        if (newPermutation.ToString() == permutation.ToString())
+                        {
+                            duplicate = true;
+                            break;
+                        }
+                    }
+                    if (!duplicate)
+                    {
+                        permutations.Add(newPermutation);
+                    }
+                }*/
             }
 
-            //generate all possible words
+            /*//generate all possible words
             List<(List<Tile>, int)> words = new();
             foreach (Word location in wordLocations)
             {
@@ -152,10 +171,11 @@ namespace Scrabble
                 {
                     Word newWord = location.Clone();
                     Word tempPermutation = permutation.Clone();
-                    List<Tile> lettersPlaced = new();
+                    //List<Tile> lettersPlaced = new();
                     List<Tile> blanks = newWord.word.FindAll(tile => tile.Letter == ' ');
                     if (permutation.word.Count == blanks.Count)
                     {
+                        List<Tile> lettersPlaced = new();
                         int i = 0;
                         foreach (Tile tile in location.word)
                         {
@@ -190,40 +210,129 @@ namespace Scrabble
                         }
                     }
                 }
-            }
+            }*/
 
-            if (difficulty == Difficulty.High)
+            
+            //generate all possible words using parallel processing
+            ConcurrentBag<(List<Tile>, int)> parallelWords = new();
+            Parallel.ForEach(wordLocations, location =>
             {
-                (List<Tile>, int) bestMove = words[0];
-
-                foreach ((List<Tile>, int) tuple in words)
+                foreach(Word permutation in permutations)
                 {
-                    if (tuple.Item2 > bestMove.Item2)
+                    Word newWord = location.Clone();
+                    //Word tempPermutation = permutation.Clone();
+                    //List<Tile> lettersPlaced = new();
+                    List<Tile> blanks = newWord.word.FindAll(tile => tile.Letter == ' ');
+                    if (permutation.word.Count == blanks.Count)
                     {
-                        bestMove = tuple;
+                        List<Tile> lettersPlaced = new();
+                        int i = 0;
+                        int j = 0;
+                        foreach (Tile tile in location.word)
+                        {
+                            /*if (tile.Letter == ' ')
+                            {
+                                newWord.word[i] = tempPermutation.word[0];
+                                lettersPlaced.Add(new Tile(tempPermutation.word[0].Letter, tile.Coord));
+                                tempPermutation.word.RemoveAt(0);
+                                newWord.word[i].Coord = tile.Coord;
+                            }
+                            i++;*/
+
+                            if (tile.Letter == ' ')
+                            {
+                                newWord.word[i] = permutation.word[j];
+                                lettersPlaced.Add(new Tile(permutation.word[j].Letter, tile.Coord));
+                                //tempPermutation.word.RemoveAt(0);
+                                newWord.word[i].Coord = tile.Coord;
+                                j++;
+                            }
+                            i++;
+                        }
+                        //check word is in dictionary
+                        if (newWord.Validate())
+                        {
+                            List<Word> newWords = Word.GetInterLinkedWords(lettersPlaced, previousTiles);
+                            int score = 0;
+                            bool invalid = false;
+                            foreach (Word tempNewWord in newWords)
+                            {
+                                if (!tempNewWord.Validate())
+                                {
+                                    invalid = true;
+                                    break;
+                                }
+                                score += tempNewWord.GetValue;
+                            }
+                            if (!invalid)
+                            {
+                                parallelWords.Add((lettersPlaced, score));
+                            }
+                        }
                     }
                 }
+            });
+            List<(List<Tile>, int)> words = parallelWords.ToList();
 
-                return bestMove.Item1;
-            }
-            else
+            Difficulty tempDifficulty = difficulty;
+            while (true)
             {
-                List<(List<Tile>, int)> sortedWords = words.OrderBy(tuple => tuple.Item2).ToList();
-                bool valid = false;
-                int i = 0;
-
-                while (valid == false)
+                if (tempDifficulty == Difficulty.High)
                 {
-                    Task<float> popularity = (new Word(sortedWords[i].Item1)).GetPopularity();
-                    if (await popularity > difficultyThreshold[difficulty])
+                    (List<Tile>, int) bestMove = words[0];
+
+                    foreach ((List<Tile>, int) tuple in words)
                     {
-                        valid = true;
-                        return sortedWords[i].Item1;
+                        if (tuple.Item2 > bestMove.Item2)
+                        {
+                            bestMove = tuple;
+                        }
+                    }
+
+                    return bestMove.Item1;
+                }
+                else
+                {
+                    List<(List<Tile>, int)> sortedWords = words.OrderByDescending(tuple => tuple.Item2).ToList();
+                    bool valid = false;
+                    int i = 0;
+
+                    while (!valid)
+                    {
+                        List<Word> interlinkedWords = Word.GetInterLinkedWords(sortedWords[i].Item1, previousTiles);
+                        List<float> popularities = new();
+                        foreach (Word interlinkedWord in interlinkedWords)
+                        {
+                            popularities.Add(await interlinkedWord.GetPopularity());
+                        }
+
+                        float minPopularity = popularities.Min();
+                        if (minPopularity > difficultyThreshold[tempDifficulty])
+                        {
+                            valid = true;
+                            return sortedWords[i].Item1;
+                        }
+                        else
+                        {
+                            Debug.WriteLine(interlinkedWords[0] + " is not popular enough");
+                        }
+                        i++;
+                        if (i > sortedWords.Count - 1)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (tempDifficulty == Difficulty.Low)
+                    {
+                        tempDifficulty = Difficulty.Medium;
+                    }
+                    else
+                    {
+                        tempDifficulty = Difficulty.High;
                     }
                 }
             }
-
-
         }
 
         private List<Word> IterateWord(Coord coord, Orientation direction, List<Tile> previousTiles)
@@ -260,26 +369,7 @@ namespace Scrabble
                     word.AppendWord(tile);
                     if (word.word.Count > 1)
                     {
-                        /*bool add = false;
-                        int numBlanks = 0;
-                        foreach (Tile wordTile in word.word)
-                        {
-                            if (tile.Letter != ' ')
-                            {
-                                add = true;
-                            }
-                            else
-                            {
-                                numBlanks++;
-                            }
-                        }
-                        if (add && numBlanks > 0 && numBlanks <= 7)
-                        {
-                            returnWords.Add(word.Clone());
-                        }*/
-
                         returnWords.Add(word.Clone());
-
                     }
                 }
             }

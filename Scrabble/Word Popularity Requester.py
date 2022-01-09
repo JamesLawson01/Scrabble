@@ -19,9 +19,18 @@ def request(url):
 open("Scrabble/Scrabble/word popularities.txt", "w").close()
 
 with open("Scrabble/Scrabble/Sowpods.txt") as file:
-    for word in file.readlines():
+    words = file.readline().replace("\n", "")
 
-        if word[0] != previousLetter:
+    for word in file.read().splitlines()[1:]:
+        words += "%2C" + word
+
+    url = f"https://books.google.com/ngrams/json?content={words}&year_start=2018&year_end=2019&corpus=26&smoothing=0"
+
+    r = requests.get(url).json()
+
+
+
+    '''if word[0] != previousLetter:
             previousLetter = word[0]
             print(previousLetter)
 
@@ -50,5 +59,5 @@ with open("Scrabble/Scrabble/Sowpods.txt") as file:
                 raise Exception(f"{word} gave unexpected number of popularites")
 
         with open("Scrabble/Scrabble/word popularities.txt", "a") as outputFile:
-            outputFile.write(word + "\t" + str(popularity))
+            outputFile.write(word + "\t" + str(popularity))'''
 

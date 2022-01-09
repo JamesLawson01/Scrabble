@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Policy;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
@@ -16,7 +17,7 @@ namespace Scrabble
     {
         private const string sowpodsLocation = @"Sowpods.txt";
 
-        private static bool previouslyValidated = false;
+        //private static bool previouslyValidated = false;
 
         private static HashSet<string> sowpods;
 
@@ -59,6 +60,11 @@ namespace Scrabble
             }
         }
 
+        static Word()
+        {
+            InitSowpods();
+        }
+
         public Word(List<Tile> word)
         {
             this.word = word;
@@ -83,11 +89,6 @@ namespace Scrabble
 
         public bool Validate()
         {
-            if (!previouslyValidated)
-            {
-                InitSowpods();
-                previouslyValidated = true;
-            }
             return sowpods.Contains(ToString());
         }
 
@@ -156,7 +157,7 @@ namespace Scrabble
 
             client.DefaultRequestHeaders.Accept.Clear();
 
-            Task<Stream> streamTask = client.GetStreamAsync(url);
+            Task<Stream> streamTask = Request(url);
             List<Ngram> ngrams;
             try
             {
@@ -177,13 +178,19 @@ namespace Scrabble
             return ngrams[0].Timeseries[1];
         }
 
-        /*private async Task<Stream> Request(string url)
+        private async Task<Stream> Request(string url)
         {
             try
             {
-                Task<Stream> streamTask = client.GetStreamAsync(url);
+                return await client.GetStreamAsync(url);
             }
-        }*/
+            catch (HttpRequestException)
+            {
+                Thread.Sleep(2000);
+                Debug.WriteLine("Waiting for Google");
+                return await Request(url);
+            }
+        }
 
         /*private static async Task<Ngram> RequestApiData(string url)
         {
