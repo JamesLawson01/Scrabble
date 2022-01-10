@@ -66,6 +66,8 @@ namespace Scrabble
 
         private bool isFirstTurn = true;
 
+        private bool gameOver = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -355,6 +357,10 @@ namespace Scrabble
             {
                 turnTiles = await ai.GetTilesToPlaceAsync(playedTiles);
                 words = Word.GetInterLinkedWords(turnTiles, playedTiles);
+                if (words.Count == 0)
+                {
+                    gameOver = true;
+                }
             }
             else
             {
@@ -405,22 +411,37 @@ namespace Scrabble
                 {
                     computerScoreLabel.Content = currentPlayer.Score;
                 }
-            }
 
-            //remove used bonuses
-            foreach (Word word in words)
-            {
-                foreach (Tile tile in word.word)
+                //check if game over
+                if (letterPool.Count == 0 && currentPlayer.IsOutOfTiles)
                 {
-                    tile.Coord.RemoveBonus();
+                    gameOver = true;
                 }
             }
 
-            isFirstTurn = false;
-            SwitchPlayer();
-            if (currentPlayer is AI)
+            if (gameOver)
             {
-                await FinishTurnAsync();
+                GameOverWindow gameOverWindow = new(players);
+                gameOverWindow.Owner = this;
+                gameOverWindow.ShowDialog();
+            }
+            else 
+            {
+                //remove used bonuses
+                foreach (Word word in words)
+                {
+                    foreach (Tile tile in word.word)
+                    {
+                        tile.Coord.RemoveBonus();
+                    }
+                }
+
+                isFirstTurn = false;
+                SwitchPlayer();
+                if (currentPlayer is AI)
+                {
+                    await FinishTurnAsync();
+                }
             }
         }
 
@@ -456,6 +477,7 @@ namespace Scrabble
 
             wordList.Children.Add(stackPanel);
         }
+
 
     }
 }

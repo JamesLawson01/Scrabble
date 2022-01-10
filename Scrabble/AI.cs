@@ -213,6 +213,10 @@ namespace Scrabble
                     }
                 }
             });
+            if (parallelWords.Count == 0)
+            {
+                return new List<Tile>();
+            }
             List<(List<Tile>, int)> words = parallelWords.ToList();
 
             Difficulty tempDifficulty = difficulty;

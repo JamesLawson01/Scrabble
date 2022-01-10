@@ -17,6 +17,8 @@ namespace Scrabble
         //tiles the user can play
         public List<Tile> Tiles { get; }
 
+        public bool IsOutOfTiles { get { return Tiles.Count == 0; } }
+
         private int numTurns;
         public int NumTurns { get { return numTurns; } }
 
