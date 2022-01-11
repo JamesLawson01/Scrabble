@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace Scrabble
 {
@@ -67,6 +68,8 @@ namespace Scrabble
         private bool isFirstTurn = true;
 
         private bool gameOver = false;
+
+        private int timeElapsed;
 
         public MainWindow()
         {
@@ -133,12 +136,24 @@ namespace Scrabble
             players = new();
             players.Add(new User(givenName, letterPool.GetRange(0, 7)));
             letterPool.RemoveRange(0, 7);
-            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.High));
+            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.Medium));
             letterPool.RemoveRange(0, 7);
             currentPlayer = players[0];
 
             //display the user's tiles on the screen
             AddTilesToDock(currentPlayer);
+
+            //sets the timer going
+            DispatcherTimer timer = new();//DispatcherPriority.Render);
+            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Tick += IncrementTimer;
+            timer.Start();
+        }
+
+        private void IncrementTimer(object sender, EventArgs e)
+        {
+            timeLabel.Content = new TimeSpan(0, 0, timeElapsed).ToString();
+            timeElapsed += 1;
         }
 
         //add user's tiles to the tile dock
@@ -347,6 +362,7 @@ namespace Scrabble
         //Called when the button to finish a turn is clicked
         private async void FinishTurnAsync(object sender, RoutedEventArgs e)
         {
+            Debug.WriteLine("button pressed");
             await FinishTurnAsync();
         }
 
@@ -355,7 +371,7 @@ namespace Scrabble
             List<Word> words;
             if (currentPlayer is AI ai)
             {
-                turnTiles = await ai.GetTilesToPlaceAsync(playedTiles);
+                turnTiles = await Task.Run(() => ai.GetTilesToPlaceAsync(playedTiles));
                 words = Word.GetInterLinkedWords(turnTiles, playedTiles);
                 if (words.Count == 0)
                 {
