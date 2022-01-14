@@ -87,7 +87,7 @@
 
         <!-- Game control buttons -->
         <Border Style="{StaticResource borderStyle}" Margin="110,5,110,10" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+            <StackPanel x:Name="controlButtons" Orientation="Horizontal" HorizontalAlignment="Left">
                 <Button x:Name="finishMove" Content="Finish turn" Click="FinishTurnAsync"/>
                 <Button x:Name="swapTile" Content="Swap"/>
             </StackPanel>

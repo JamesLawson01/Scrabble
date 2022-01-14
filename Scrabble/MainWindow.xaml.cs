@@ -362,8 +362,18 @@ namespace Scrabble
         //Called when the button to finish a turn is clicked
         private async void FinishTurnAsync(object sender, RoutedEventArgs e)
         {
+            Mouse.OverrideCursor = Cursors.Wait;
+            playGrid.IsEnabled = false;
+            tileDock.IsEnabled = false;
+            controlButtons.IsEnabled = false;
+
             Debug.WriteLine("button pressed");
             await FinishTurnAsync();
+
+            controlButtons.IsEnabled = true;
+            tileDock.IsEnabled = true;
+            playGrid.IsEnabled = true;
+            Mouse.OverrideCursor = null;
         }
 
         private async Task FinishTurnAsync()
