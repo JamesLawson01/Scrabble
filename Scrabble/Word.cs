@@ -220,14 +220,14 @@ namespace Scrabble
 
 
         //Ensures letters are placed in valid locations
-        public static bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles, bool isFirstTurn)
+        public static bool CheckLetterLocation(List<Tile> tiles, List<Tile> previousTiles)
         {
             if (tiles.Count == 0)
             {
                 return false;
             }
 
-            if (isFirstTurn)
+            if (previousTiles.Count == 0)
             {
                 bool centre = false;
                 foreach (Tile tile in tiles)
@@ -284,7 +284,7 @@ namespace Scrabble
 
             Word tempWord = IterateWord(sortedTiles[0].Coord with { }, orientation, previousTiles, tiles);
 
-            bool tryBool = sortedTiles.All(letter => tempWord.word.Contains(letter)) && (interlinkingTiles.Count >= 1 || isFirstTurn);
+            bool tryBool = sortedTiles.All(letter => tempWord.word.Contains(letter)) && (interlinkingTiles.Count >= 1 || previousTiles.Count == 0);
             return tryBool;
         }
 
@@ -423,6 +423,11 @@ namespace Scrabble
         //Returns all the words created on a turn
         public static List<Word> GetInterLinkedWords(List<Tile> checkTiles, List<Tile> previousTiles)
         {
+            if (previousTiles.Count == 0)
+            {
+                return new List<Word>() { new Word(Word.SortTiles(checkTiles, GetOrientation(checkTiles))) };
+            }
+
             Orientation orientation = GetOrientation(checkTiles);
             List<Tile> sortedTiles = SortTiles(checkTiles, orientation);
             List<Tile> interlinkingTiles = GetInterlinkedTiles(checkTiles, previousTiles);

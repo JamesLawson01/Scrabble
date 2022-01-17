@@ -57,11 +57,11 @@ namespace Scrabble
                         int numBlanks = 0;
                         foreach (Tile tile in word.word)
                         {
-                            if (tile.Letter != ' ')
+                            if (tile.Letter != ' ' || previousTiles.Count == 0)
                             {
                                 add = true;
                             }
-                            else
+                            if (tile.Letter == ' ')
                             {
                                 numBlanks++;
                             }
@@ -76,63 +76,87 @@ namespace Scrabble
 
             //removes words that have a placed tile before or after them, as that tile would form part of the word.
             //the word with that tile included is already elsewhere in the words list
-            int t = 0;
-            bool removed;
-            bool loop = true;
-            while (loop)
+            if (previousTiles.Count > 0)
             {
-                removed = false;
-                Word word = wordLocations[t];
-                List<Tile> boundingTiles = new();
-                Orientation orientation = word.GetOrientation();
-
-                Coord firstCoord = word.word[0].Coord;
-                Coord lastCoord = word.word.Last().Coord;
-                List<Coord> boundingCoords;
-
-                //gets the coord immediately before and immediately after the word
-                if (orientation == Orientation.Horizontal)
+                int t = 0;
+                bool removed;
+                bool loop = true;
+                while (loop)
                 {
-                    boundingCoords = new()
-                    {
-                        new Coord(firstCoord.X - 1, firstCoord.Y),
-                        new Coord(lastCoord.X + 1, lastCoord.Y)
-                    };
-                }
-                else
-                {
-                    boundingCoords = new()
-                    {
-                        new Coord(firstCoord.X, firstCoord.Y - 1),
-                        new Coord(lastCoord.X, lastCoord.Y + 1)
-                    };
-                }
+                    removed = false;
+                    Word word = wordLocations[t];
+                    List<Tile> boundingTiles = new();
+                    Orientation orientation = word.GetOrientation();
 
-                //removes the word if a tile has been placed at a boundingCoord
-                foreach (Coord boundingCoord in boundingCoords)
-                {
-                    if (!boundingCoord.IsOutsideBounds())
+                    Coord firstCoord = word.word[0].Coord;
+                    Coord lastCoord = word.word.Last().Coord;
+                    List<Coord> boundingCoords;
+
+                    //gets the coord immediately before and immediately after the word
+                    if (orientation == Orientation.Horizontal)
                     {
-                        Tile boundingTile = previousTiles.Find(tile => tile.Coord == boundingCoord);
-                        if (boundingTile is not null)
+                        boundingCoords = new()
                         {
-                            wordLocations.Remove(word);
-                            removed = true;
+                            new Coord(firstCoord.X - 1, firstCoord.Y),
+                            new Coord(lastCoord.X + 1, lastCoord.Y)
+                        };
+                    }
+                    else
+                    {
+                        boundingCoords = new()
+                        {
+                            new Coord(firstCoord.X, firstCoord.Y - 1),
+                            new Coord(lastCoord.X, lastCoord.Y + 1)
+                        };
+                    }
+
+                    //removes the word if a tile has been placed at a boundingCoord
+                    foreach (Coord boundingCoord in boundingCoords)
+                    {
+                        if (!boundingCoord.IsOutsideBounds())
+                        {
+                            Tile boundingTile = previousTiles.Find(tile => tile.Coord == boundingCoord);
+                            if (boundingTile is not null)
+                            {
+                                wordLocations.Remove(word);
+                                removed = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    //moves the counter along, if the word hasn't been removed
+                    if (!removed)
+                    {
+                        t++;
+                    }
+                    //reached the end of the words list
+                    if (t >= wordLocations.Count)
+                    {
+                        loop = false;
+                    }
+                }
+            }
+            else
+            {
+                List<Word> tempWordLocations = new();
+                foreach (Word word in wordLocations)
+                {
+                    bool centre = false;
+                    foreach (Tile tile in word.word)
+                    {
+                        if (tile.Coord == new Coord(7, 7))
+                        {
+                            centre = true;
                             break;
                         }
                     }
+                    if (centre)
+                    {
+                        tempWordLocations.Add(word);
+                    }
                 }
-
-                //moves the counter along, if the word hasn't been removed
-                if (!removed)
-                {
-                    t++;
-                }
-                //reached the end of the words list
-                if (t >= wordLocations.Count)
-                {
-                    loop = false;
-                }
+                wordLocations = tempWordLocations;
             }
 
             //temp = new();

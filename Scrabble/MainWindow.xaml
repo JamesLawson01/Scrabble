@@ -67,6 +67,8 @@
             </ScrollViewer>
         </Border>
 
+        <Image x:Name="DeleteTileImage" Grid.Column="0" Grid.Row="2" HorizontalAlignment="Left" Source="Delete Tile.png" AllowDrop="True" Drop="DeleteTile"/>
+            
         <!-- PLayer's letter dock -->
         <Border Style="{StaticResource borderStyle}" Margin="110,5,110,10" Grid.Column="0" Grid.Row="2" VerticalAlignment="Bottom">
             <StackPanel x:Name="tileDock" Orientation="Horizontal" HorizontalAlignment="Center">
@@ -89,7 +91,7 @@
         <Border Style="{StaticResource borderStyle}" Margin="110,5,110,10" Grid.Column="1" Grid.Row="2" HorizontalAlignment="Left">
             <StackPanel x:Name="controlButtons" Orientation="Horizontal" HorizontalAlignment="Left">
                 <Button x:Name="finishMove" Content="Finish turn" Click="FinishTurnAsync"/>
-                <Button x:Name="swapTile" Content="Swap"/>
+                <!--<Button x:Name="swapTile" Content="Swap" Click=""/>-->
             </StackPanel>
         </Border>
     </Grid>
