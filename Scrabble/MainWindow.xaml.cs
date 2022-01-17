@@ -57,6 +57,8 @@ namespace Scrabble
 
         private List<Tile> playedTiles = new();
 
+        private bool deleteTiles = false;
+
         private readonly List<User> players;
 
         private User currentPlayer;
@@ -64,8 +66,6 @@ namespace Scrabble
         private readonly BitmapImage nullImage = new(new Uri($"{uriPrefix}Blank Image.png", UriKind.Absolute));
 
         private List<Tile> turnTiles = new();
-
-        private bool isFirstTurn = true;
 
         private bool gameOver = false;
 
@@ -121,22 +121,13 @@ namespace Scrabble
                 }
             }
 
-            //shuffle
-            int length = letterPool.Count;
-            Random rnd = new();
-            for (int i = 0; i < length; i++)        // for each letter in the list, swap it with another one
-            {
-                int dest = rnd.Next(0, length);
-                Tile shuffleTile = letterPool[dest];
-                letterPool[dest] = letterPool[i];
-                letterPool[i] = shuffleTile;
-            }
+            letterPool = Shuffle(letterPool);
 
             //Create the player and AI
             players = new();
             players.Add(new User(givenName, letterPool.GetRange(0, 7)));
             letterPool.RemoveRange(0, 7);
-            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.Medium));
+            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.High));
             letterPool.RemoveRange(0, 7);
             currentPlayer = players[0];
 
@@ -306,6 +297,8 @@ namespace Scrabble
             //match dragged letter to tile
             Tile tile = GetTileFromImage(image);
             turnTiles.Add(tile);
+
+            DeleteTileImage.AllowDrop = false;
         }
 
         //Gets the letter represented by an Image
@@ -331,8 +324,17 @@ namespace Scrabble
         private Coord GetGridCoord(Image matchImage)
         {
             int columns = playGrid.Columns;
+            int index;
 
-            int index = playGrid.Children.IndexOf((matchImage.Parent as Viewbox).Parent as Border);
+            if (matchImage.Parent is Viewbox viewbox)
+            {
+                index = playGrid.Children.IndexOf((Border)viewbox.Parent);
+            }
+            else
+            {
+                return null;
+            }
+
             if (index == -1)
             {
                 throw new ArgumentOutOfRangeException(paramName: nameof(matchImage), message: "Image not found on the gameboard");
@@ -374,101 +376,124 @@ namespace Scrabble
             tileDock.IsEnabled = true;
             playGrid.IsEnabled = true;
             Mouse.OverrideCursor = null;
+
+            DeleteTileImage.AllowDrop = true;
         }
 
         private async Task FinishTurnAsync()
         {
-            List<Word> words;
-            if (currentPlayer is AI ai)
+            if (!deleteTiles)
             {
-                turnTiles = await Task.Run(() => ai.GetTilesToPlaceAsync(playedTiles));
-                words = Word.GetInterLinkedWords(turnTiles, playedTiles);
-                if (words.Count == 0)
+                List<Word> words;
+                if (currentPlayer is AI ai)
                 {
-                    gameOver = true;
-                }
-            }
-            else
-            {
-                words = Word.GetInterLinkedWords(turnTiles, playedTiles);
-            }
-
-
-            if (Word.CheckLetterLocation(turnTiles, playedTiles, isFirstTurn) && words.Count > 0)
-            {
-                int score = 0;
-                foreach (Word word in words)
-                {
-                    currentPlayer.AddWord(word);    //add created word to the player's list of words
-                    AddWordToPanel(word);   //add word to side panel
-                    //word.GetPopularity();
-                    score += word.Value;
-                }
-
-                //lock letters in place
-                foreach (Tile tile in turnTiles)
-                {
-                    playedTiles.Add(tile);
-                    Image image = GetImageFromCoord(tile.Coord);
-                    image.AllowDrop = false;
-                    image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
-
-                    if (currentPlayer is AI)
+                    turnTiles = await Task.Run(() => ai.GetTilesToPlaceAsync(playedTiles));
+                    words = Word.GetInterLinkedWords(turnTiles, playedTiles);
+                    if (words.Count == 0)
                     {
-                        image.Source = tile.Image;
+                        gameOver = true;
                     }
-                }
-
-                currentPlayer.IncrementTurns();
-
-                List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
-                letterPool.RemoveRange(0, newTiles.Count); //to document
-                currentPlayer.ChangeTiles(turnTiles, newTiles);
-
-                turnTiles.Clear();
-
-                //update UI
-                if (currentPlayer is not AI)
-                {
-                    AddTilesToDock(currentPlayer);
-                    userScoreLabel.Content = currentPlayer.Score;
                 }
                 else
                 {
-                    computerScoreLabel.Content = currentPlayer.Score;
+                    words = Word.GetInterLinkedWords(turnTiles, playedTiles);
                 }
 
-                //check if game over
-                if (letterPool.Count == 0 && currentPlayer.IsOutOfTiles)
+                if (Word.CheckLetterLocation(turnTiles, playedTiles) && words.Count > 0)
                 {
-                    gameOver = true;
-                }
-            }
-
-            if (gameOver)
-            {
-                GameOverWindow gameOverWindow = new(players);
-                gameOverWindow.Owner = this;
-                gameOverWindow.ShowDialog();
-            }
-            else 
-            {
-                //remove used bonuses
-                foreach (Word word in words)
-                {
-                    foreach (Tile tile in word.word)
+                    int score = 0;
+                    foreach (Word word in words)
                     {
-                        tile.Coord.RemoveBonus();
+                        currentPlayer.AddWord(word);    //add created word to the player's list of words
+                        AddWordToPanel(word);   //add word to side panel
+                                                //word.GetPopularity();
+                        score += word.Value;
+                    }
+
+                    //lock letters in place
+                    foreach (Tile tile in turnTiles)
+                    {
+                        playedTiles.Add(tile);
+                        Image image = GetImageFromCoord(tile.Coord);
+                        image.AllowDrop = false;
+                        image.PreviewMouseLeftButtonDown -= new MouseButtonEventHandler(DragLetter);
+
+                        if (currentPlayer is AI)
+                        {
+                            image.Source = tile.Image;
+                        }
+                    }
+
+                    //check if game over
+                    if (letterPool.Count == 0 && currentPlayer.IsOutOfTiles)
+                    {
+                        gameOver = true;
                     }
                 }
 
-                isFirstTurn = false;
-                SwitchPlayer();
-                if (currentPlayer is AI)
+                if (gameOver)
                 {
-                    await FinishTurnAsync();
+                    GameOverWindow gameOverWindow = new(players);
+                    gameOverWindow.Owner = this;
+                    gameOverWindow.ShowDialog();
+                }
+                else
+                {
+                    //remove used bonuses
+                    foreach (Word word in words)
+                    {
+                        foreach (Tile tile in word.word)
+                        {
+                            tile.Coord.RemoveBonus();
+                        }
+                    }
                 }
             }
+            else //delete tiles
+            {
+                letterPool.AddRange(turnTiles);
+                letterPool = Shuffle(letterPool);
+                deleteTiles = false;
+            }
+
+            currentPlayer.IncrementTurns();
+
+            List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
+            letterPool.RemoveRange(0, newTiles.Count); //to document
+            currentPlayer.ChangeTiles(turnTiles, newTiles);
+
+            turnTiles.Clear();
+
+            //update UI
+            if (currentPlayer is not AI)
+            {
+                AddTilesToDock(currentPlayer);
+                userScoreLabel.Content = currentPlayer.Score;
+            }
+            else
+            {
+                computerScoreLabel.Content = currentPlayer.Score;
+            }
+
+            SwitchPlayer();
+            if (currentPlayer is AI)
+            {
+                await FinishTurnAsync();
+            }
+        }
+
+        private static List<Tile> Shuffle(List<Tile> tiles)
+        {
+            int length = tiles.Count;
+            Random rnd = new();
+            for (int i = 0; i < length; i++)        // for each letter in the list, swap it with another one
+            {
+                int dest = rnd.Next(0, length);
+                Tile shuffleTile = tiles[dest];
+                tiles[dest] = tiles[i];
+                tiles[i] = shuffleTile;
+            }
+            return tiles;
         }
 
         private void SwitchPlayer()
@@ -504,6 +529,14 @@ namespace Scrabble
             wordList.Children.Add(stackPanel);
         }
 
-
+        private void DeleteTile(object sender, DragEventArgs e)
+        {
+            deleteTiles = true;
+            Image image = new();
+            image.Source = (ImageSource)e.Data.GetData("System.Windows.Media.Imaging.BitmapImage");
+            Tile tileToDelete = GetTileFromImage(image);
+            turnTiles.Add(tileToDelete);
+            playGrid.IsEnabled = false;
+        }
     }
 }

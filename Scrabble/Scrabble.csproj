@@ -14,6 +14,7 @@
     <None Remove="3x letter.png" />
     <None Remove="3x word.png" />
     <None Remove="Blank Image.png" />
+    <None Remove="Delete Tile.png" />
     <None Remove="letters\A.png" />
     <None Remove="letters\B.png" />
     <None Remove="letters\C.png" />
@@ -55,6 +56,7 @@
     <Resource Include="2x word.png" />
     <Resource Include="3x letter.png" />
     <Resource Include="3x word.png" />
+    <Resource Include="Delete Tile.png" />
     <Resource Include="letters\A.png" />
     <Resource Include="letters\B.png" />
     <Resource Include="letters\C.png" />
