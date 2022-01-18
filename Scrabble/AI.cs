@@ -11,6 +11,8 @@ namespace Scrabble
 {
     public class AI : User
     {
+        Random rnd = new();
+
         public enum Difficulty
         {
             Medium,
@@ -23,6 +25,13 @@ namespace Scrabble
             { Difficulty.Medium, 1.2E-06 },
             { Difficulty.Low, 5.0E-05 },
             { Difficulty.High, 0}
+        };
+
+        private readonly Dictionary<Difficulty, int> invalidWordChance = new()
+        {
+            { Difficulty.Medium, 3 },
+            { Difficulty.Low, 5 },
+            { Difficulty.High, 1 }
         };
 
         private readonly Difficulty difficulty;
@@ -220,12 +229,22 @@ namespace Scrabble
                             List<Word> newWords = Word.GetInterLinkedWords(lettersPlaced, previousTiles);
                             int score = 0;
                             bool invalid = false;
+                            int allowedInvalid = 0;
                             foreach (Word tempNewWord in newWords)
                             {
+                                int randomNum = rnd.Next(0, 101);
                                 if (!tempNewWord.Validate())
                                 {
-                                    invalid = true;
-                                    break;
+                                    if (randomNum >= invalidWordChance[difficulty] || allowedInvalid >= 1)
+                                    {
+                                        invalid = true;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        allowedInvalid++;
+                                        Debug.WriteLine($"{tempNewWord} is allowed to be invalid");
+                                    }
                                 }
                                 score += tempNewWord.Value;
                             }
