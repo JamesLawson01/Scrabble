@@ -67,9 +67,13 @@ namespace Scrabble
 
         private List<Tile> turnTiles = new();
 
+        private List<Tile> previousTurnTiles = new();
+
         private bool gameOver = false;
 
         private int timeElapsed;
+
+        private List<(Button, Word, StackPanel)> possibleChallengeWords = new();
 
         public MainWindow()
         {
@@ -125,9 +129,9 @@ namespace Scrabble
 
             //Create the player and AI
             players = new();
-            players.Add(new User(givenName, letterPool.GetRange(0, 7)));
+            players.Add(new User(givenName, letterPool.GetRange(0, 7), userScoreLabel));
             letterPool.RemoveRange(0, 7);
-            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.High));
+            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.High, computerScoreLabel));
             letterPool.RemoveRange(0, 7);
             currentPlayer = players[0];
 
@@ -364,26 +368,37 @@ namespace Scrabble
         //Called when the button to finish a turn is clicked
         private async void FinishTurnAsync(object sender, RoutedEventArgs e)
         {
-            Mouse.OverrideCursor = Cursors.Wait;
-            playGrid.IsEnabled = false;
-            tileDock.IsEnabled = false;
-            controlButtons.IsEnabled = false;
+            if (Word.CheckLetterLocation(turnTiles, playedTiles))
+            {
+                Mouse.OverrideCursor = Cursors.Wait;
+                playGrid.IsEnabled = false;
+                tileDock.IsEnabled = false;
+                controlButtons.IsEnabled = false;
 
-            Debug.WriteLine("button pressed");
-            await FinishTurnAsync();
+                Debug.WriteLine("button pressed");
+                await FinishTurnAsync();
 
-            controlButtons.IsEnabled = true;
-            tileDock.IsEnabled = true;
-            playGrid.IsEnabled = true;
-            Mouse.OverrideCursor = null;
+                controlButtons.IsEnabled = true;
+                tileDock.IsEnabled = true;
+                playGrid.IsEnabled = true;
+                Mouse.OverrideCursor = null;
 
-            DeleteTileImage.AllowDrop = true;
+                DeleteTileImage.AllowDrop = true;
+            }
         }
 
         private async Task FinishTurnAsync()
         {
+            foreach ((Button, Word, StackPanel) removeTuple in possibleChallengeWords)
+            {
+                Button removeButton = removeTuple.Item1;
+                removeButton.IsEnabled = false;
+                removeButton.Visibility = Visibility.Collapsed;
+            }
+            possibleChallengeWords.Clear();
             if (!deleteTiles)
             {
+                currentPlayer.IncrementTurns();
                 List<Word> words;
                 if (currentPlayer is AI ai)
                 {
@@ -398,6 +413,8 @@ namespace Scrabble
                 {
                     words = Word.GetInterLinkedWords(turnTiles, playedTiles);
                 }
+
+                currentPlayer.SaveScore();
 
                 if (Word.CheckLetterLocation(turnTiles, playedTiles) && words.Count > 0)
                 {
@@ -451,29 +468,28 @@ namespace Scrabble
             }
             else //delete tiles
             {
+                currentPlayer.IncrementTurns();
                 letterPool.AddRange(turnTiles);
                 letterPool = Shuffle(letterPool);
                 deleteTiles = false;
             }
 
-            currentPlayer.IncrementTurns();
+            
 
             List<Tile> newTiles = letterPool.Take(turnTiles.Count).ToList();
-            letterPool.RemoveRange(0, newTiles.Count); //to document
+            letterPool.RemoveRange(0, newTiles.Count);
             currentPlayer.ChangeTiles(turnTiles, newTiles);
 
+            previousTurnTiles.Clear();
+            previousTurnTiles.AddRange(turnTiles);
             turnTiles.Clear();
 
             //update UI
             if (currentPlayer is not AI)
             {
                 AddTilesToDock(currentPlayer);
-                userScoreLabel.Content = currentPlayer.Score;
             }
-            else
-            {
-                computerScoreLabel.Content = currentPlayer.Score;
-            }
+            //currentPlayer.IncrementTurns();
 
             SwitchPlayer();
             if (currentPlayer is AI)
@@ -507,6 +523,19 @@ namespace Scrabble
             currentPlayer = players[index];
         }
 
+        //Gets the user who just finished their turn
+        private User GetPreviousPlayer()
+        {
+            int index = players.IndexOf(currentPlayer);
+            index--;
+            if (index < 0)
+            {
+                index = players.Count - 1;
+            }
+            return players[index];
+
+        }
+
         //Adds a word to the panel of created words
         private void AddWordToPanel(Word word)
         {
@@ -519,14 +548,69 @@ namespace Scrabble
 
             Button button = new();
             button.Content = "🔍";
+            button.Click += ChallengeWord;
             ToolTip toolTip = new();
-            toolTip.Content = "Get definition";
+            toolTip.Content = "Challenge";
 
             button.ToolTip = toolTip;
             stackPanel.Children.Add(label);
             stackPanel.Children.Add(button);
 
             wordList.Children.Add(stackPanel);
+
+            possibleChallengeWords.Add((button, word, stackPanel));
+        }
+
+        //called when the user challenges a word
+        private void ChallengeWord(object sender, RoutedEventArgs e)
+        {
+            Button button = sender as Button;
+            (Button, Word, StackPanel) tuple = possibleChallengeWords.Find(tuple => tuple.Item1 == button);
+            Word word = tuple.Item2;
+
+            bool valid = word.Validate();
+
+            ChallengeWordWindow challengeWindow = new(valid, word);
+            challengeWindow.Owner = this;
+            challengeWindow.ShowDialog();
+
+            User challengedPlayer = GetPreviousPlayer();
+
+            if (valid)
+            {
+                //remove all challenge buttons, as only one word can be challenged per turn
+                foreach ((Button, Word, StackPanel) removeTuple in possibleChallengeWords)
+                {
+                    Button removeButton = removeTuple.Item1;
+                    removeButton.IsEnabled = false;
+                    removeButton.Visibility = Visibility.Collapsed;
+                }
+            }
+            else
+            {
+                //remove all words the opponent played
+                foreach ((Button, Word, StackPanel) removeTuple in possibleChallengeWords)
+                {
+                    StackPanel stackpanel = removeTuple.Item3;
+                    stackpanel.IsEnabled = false;
+                    stackpanel.Visibility = Visibility.Collapsed;
+                }
+
+                //remove letters from the gameboard
+                foreach (Tile tile in previousTurnTiles)
+                {
+                    //letterPool.Add(tile);
+                    Image image = GetImageFromCoord(tile.Coord);
+                    image.Source = nullImage;
+                    image.AllowDrop = true;
+                    playedTiles.Remove(tile);
+                }
+
+                previousTurnTiles.Clear();
+                letterPool.AddRange(challengedPlayer.Revert());
+            }
+
+            Debug.WriteLine($"{word} is valid? {valid}");
         }
 
         private void DeleteTile(object sender, DragEventArgs e)

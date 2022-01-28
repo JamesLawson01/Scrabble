@@ -31,14 +31,14 @@ namespace Scrabble
         {
             { Difficulty.Medium, 3 },
             { Difficulty.Low, 5 },
-            { Difficulty.High, 1 }
+            { Difficulty.High, 100 }
         };
 
         private readonly Difficulty difficulty;
 
         //private List<Word> temp;
 
-        public AI(string username, List<Tile> tiles, Difficulty difficulty) : base(username, tiles)
+        public AI(string username, List<Tile> tiles, Difficulty difficulty, Label scoreLabel) : base(username, tiles, scoreLabel)
         {
             this.difficulty = difficulty;
             //this.playerType = PlayerType.AI;

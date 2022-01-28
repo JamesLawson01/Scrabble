@@ -224,8 +224,9 @@ namespace Scrabble
         {
             if (tiles.Count == 0)
             {
-                return false;
+                return true;
             }
+
 
             if (previousTiles.Count == 0)
             {
@@ -423,7 +424,11 @@ namespace Scrabble
         //Returns all the words created on a turn
         public static List<Word> GetInterLinkedWords(List<Tile> checkTiles, List<Tile> previousTiles)
         {
-            if (previousTiles.Count == 0)
+            if (checkTiles.Count == 0)
+            {
+                return new List<Word>();
+            }
+            else if (previousTiles.Count == 0)
             {
                 return new List<Word>() { new Word(Word.SortTiles(checkTiles, GetOrientation(checkTiles))) };
             }
