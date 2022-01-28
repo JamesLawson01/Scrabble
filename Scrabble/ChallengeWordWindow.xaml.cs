@@ -7,17 +7,31 @@ namespace Scrabble
     /// </summary>
     public partial class ChallengeWordWindow : Window
     {
-        public ChallengeWordWindow(bool valid, Word word)
+        public ChallengeWordWindow(bool valid, Word word, User currentPlayer)
         {
             InitializeComponent();
 
-            if (valid)
+            if (currentPlayer is AI ai)
             {
-                outcomeLabel.Content = $"{word} is a valid word";
+                if (valid)
+                {
+                    outcome.Text = $"{ai.Name} unsuccessfully challenged '{word}'";
+                }
+                else
+                {
+                    outcome.Text = $"{ai.Name} unsuccessfully challenged '{word}'";
+                }
             }
             else
             {
-                outcomeLabel.Content = $"{word} is not a valid word";
+                if (valid)
+                {
+                    outcome.Text = $"Your challenge of {word} was unsuccessful";
+                }
+                else
+                {
+                    outcome.Text = $"You unsuccessfully challenged {word}";
+                }
             }
         }
     }

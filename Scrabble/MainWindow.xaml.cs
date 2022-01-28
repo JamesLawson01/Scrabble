@@ -79,8 +79,6 @@ namespace Scrabble
         {
             InitializeComponent();
 
-            string givenName = "Place Holder";
-
             //Generate gameboard
             for (int i = 0; i < 15; i++)
             {
@@ -129,9 +127,9 @@ namespace Scrabble
 
             //Create the player and AI
             players = new();
-            players.Add(new User(givenName, letterPool.GetRange(0, 7), userScoreLabel));
+            players.Add(new User("Player", letterPool.GetRange(0, 7), userScoreLabel));
             letterPool.RemoveRange(0, 7);
-            players.Add(new AI(givenName, letterPool.GetRange(0, 7), AI.Difficulty.High, computerScoreLabel));
+            players.Add(new AI("Computer", letterPool.GetRange(0, 7), AI.Difficulty.High, computerScoreLabel));
             letterPool.RemoveRange(0, 7);
             currentPlayer = players[0];
 
@@ -389,6 +387,20 @@ namespace Scrabble
 
         private async Task FinishTurnAsync()
         {
+            if (currentPlayer is AI ai)
+            {
+                List<Word> challengeWords = new();
+                foreach ((Button, Word, StackPanel) tuple in possibleChallengeWords)
+                {
+                    challengeWords.Add(tuple.Item2);
+                }
+                Word challengeWord = ai.ChooseChallengeWord(challengeWords);
+                if (challengeWord is not null)
+                {
+                    ChallengeWord(challengeWord);
+                }
+            }
+
             foreach ((Button, Word, StackPanel) removeTuple in possibleChallengeWords)
             {
                 Button removeButton = removeTuple.Item1;
@@ -400,9 +412,9 @@ namespace Scrabble
             {
                 currentPlayer.IncrementTurns();
                 List<Word> words;
-                if (currentPlayer is AI ai)
+                if (currentPlayer is AI)
                 {
-                    turnTiles = await Task.Run(() => ai.GetTilesToPlaceAsync(playedTiles));
+                    turnTiles = await Task.Run(() => ((AI)currentPlayer).GetTilesToPlaceAsync(playedTiles));
                     words = Word.GetInterLinkedWords(turnTiles, playedTiles);
                     if (words.Count == 0)
                     {
@@ -568,9 +580,14 @@ namespace Scrabble
             (Button, Word, StackPanel) tuple = possibleChallengeWords.Find(tuple => tuple.Item1 == button);
             Word word = tuple.Item2;
 
+            ChallengeWord(word);
+        }
+
+        private void ChallengeWord(Word word)
+        {
             bool valid = word.Validate();
 
-            ChallengeWordWindow challengeWindow = new(valid, word);
+            ChallengeWordWindow challengeWindow = new(valid, word, currentPlayer);
             challengeWindow.Owner = this;
             challengeWindow.ShowDialog();
 

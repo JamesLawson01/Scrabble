@@ -22,15 +22,31 @@ namespace Scrabble
 
         private Dictionary<Difficulty, double> difficultyThreshold = new()
         {
-            { Difficulty.Medium, 1.2E-06 },
             { Difficulty.Low, 5.0E-05 },
+            { Difficulty.Medium, 1.2E-06 },
             { Difficulty.High, 0}
         };
 
         private readonly Dictionary<Difficulty, int> invalidWordChance = new()
         {
-            { Difficulty.Medium, 3 },
             { Difficulty.Low, 5 },
+            { Difficulty.Medium, 3 },
+            { Difficulty.High, 1 }
+        };
+
+        //chance that the AI chooses to challenge a word that is in the dictionary
+        private readonly Dictionary<Difficulty, int> challengeValidWordChance = new()
+        {
+            { Difficulty.Low, 10 },
+            { Difficulty.Medium, 5 },
+            { Difficulty.High, 0 }
+        };
+
+        //chance that the AI chooses to challenge a word that is not in the dictionary
+        private readonly Dictionary<Difficulty, int> challengeInvalidWordChance = new()
+        {
+            { Difficulty.Low, 20 },
+            { Difficulty.Medium, 50 },
             { Difficulty.High, 100 }
         };
 
@@ -434,6 +450,41 @@ namespace Scrabble
                     }
                 }
             }
+        }
+
+        //choose a word to challenge
+        public Word ChooseChallengeWord(List<Word> words)
+        {
+            List<Word> ChallengeWords = new();
+
+            foreach (Word word in words)
+            {
+                int rndNum = rnd.Next(0, 100);
+                if (word.Validate())
+                {
+                    if (rndNum < challengeValidWordChance[difficulty])
+                    {
+                        ChallengeWords.Add(word);
+                    }
+                }
+                else
+                {
+                    if (rndNum < challengeInvalidWordChance[difficulty])
+                    {
+                        ChallengeWords.Add(word);
+                    }
+                }
+            }
+
+            if (ChallengeWords.Count > 0)
+            {
+                return ChallengeWords[rnd.Next(0, ChallengeWords.Count)];
+            }
+            else
+            {
+                return null;
+            }
+
         }
     }
 }
