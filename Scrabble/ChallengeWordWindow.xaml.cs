@@ -19,7 +19,7 @@ namespace Scrabble
                 }
                 else
                 {
-                    outcome.Text = $"{ai.Name} unsuccessfully challenged '{word}'";
+                    outcome.Text = $"{ai.Name} successfully challenged '{word}'";
                 }
             }
             else
@@ -30,7 +30,7 @@ namespace Scrabble
                 }
                 else
                 {
-                    outcome.Text = $"You unsuccessfully challenged {word}";
+                    outcome.Text = $"You successfully challenged {word}";
                 }
             }
         }
