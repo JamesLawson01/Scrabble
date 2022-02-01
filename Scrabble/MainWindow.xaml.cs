@@ -233,15 +233,21 @@ namespace Scrabble
             }*/
         }
 
+        object prevSender;
+
         //start drag
         private void DragLetter(object sender, MouseButtonEventArgs e)
         {
+            Debug.WriteLine(sender == prevSender);
+            prevSender = sender;
             Image image = (Image)sender;
+            Debug.WriteLine(GetGridCoord(image));
             DataObject data = new();
             data.SetData(image.Source);
             //data.SetData(false);
 
             ImageSource originalImage = image.Source;
+            image.AllowDrop = true;
 
             //drag from tile dock
             if (image.Parent == tileDock)
@@ -269,6 +275,7 @@ namespace Scrabble
                 }
                 else
                 {
+                    image.PreviewMouseLeftButtonDown -= DragLetter;
                     foreach (Tile loopTile in turnTiles)
                     {
                         if (loopTile.Coord == GetGridCoord(image))
@@ -294,7 +301,11 @@ namespace Scrabble
         {
             Image image = (Image)sender;
             image.Source = (ImageSource)e.Data.GetData("System.Windows.Media.Imaging.BitmapImage");
-            image.PreviewMouseLeftButtonDown += new MouseButtonEventHandler(DragLetter);
+
+            //image.PreviewMouseLeftButtonDown -= DragLetter;
+            image.PreviewMouseLeftButtonDown += DragLetter;
+
+            image.AllowDrop = false;
 
             //match dragged letter to tile
             Tile tile = GetTileFromImage(image);
