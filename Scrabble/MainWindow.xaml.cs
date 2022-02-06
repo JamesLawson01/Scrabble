@@ -233,21 +233,31 @@ namespace Scrabble
             }*/
         }
 
-        object prevSender;
+        private void GiveDragCursorFeedback(object sender, GiveFeedbackEventArgs e)
+        {
+            //canvas.Children.Clear();
+            //Image image = new Image((Image)sender).Source);
+            Image image = new();
+            image.Source = ((Image)sender).Source;
+            Point point = Mouse.GetPosition(canvas);
+            Canvas.SetLeft(image, point.X);
+            Canvas.SetTop(image, point.Y);
+            canvas.Children.Add(image);
+            Debug.WriteLine("fired");
+        }
 
         //start drag
         private void DragLetter(object sender, MouseButtonEventArgs e)
         {
-            Debug.WriteLine(sender == prevSender);
-            prevSender = sender;
             Image image = (Image)sender;
-            Debug.WriteLine(GetGridCoord(image));
             DataObject data = new();
             data.SetData(image.Source);
-            //data.SetData(false);
 
             ImageSource originalImage = image.Source;
             image.AllowDrop = true;
+
+            GiveFeedbackEventHandler handler = new(GiveDragCursorFeedback);
+            image.GiveFeedback += handler;
 
             //drag from tile dock
             if (image.Parent == tileDock)
@@ -284,16 +294,10 @@ namespace Scrabble
                             break;
                         }
                     }
-                    //turnTiles.Remove(tile);
                 }
             }
 
-            /*bool validArrangement = Word.CheckLetterLocation(turnTiles, playedTiles, currentPlayer);
-            Debug.WriteLine(validArrangement);
-
-            Word testWord = new Word(turnTiles);
-            Debug.WriteLine(testWord.Validate());*/
-
+            image.GiveFeedback -= handler;
         }
 
         //end drag
@@ -649,6 +653,21 @@ namespace Scrabble
             Tile tileToDelete = GetTileFromImage(image);
             turnTiles.Add(tileToDelete);
             playGrid.IsEnabled = false;
+        }
+
+        private void DragOverCanvas(object sender, DragEventArgs e)
+        {
+            Image image = (Image)sender;
+            Point point = e.GetPosition(canvas);
+            Canvas.SetLeft(image, point.X);
+            Canvas.SetTop(image, point.Y);
+            canvas.Children.Add(image);
+            Debug.WriteLine("fired");
+        }
+
+        private void DragLeaveCanvas(object sender, DragEventArgs e)
+        {
+
         }
     }
 }
