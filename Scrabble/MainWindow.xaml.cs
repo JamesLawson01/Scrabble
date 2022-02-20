@@ -209,9 +209,9 @@ namespace Scrabble
 
             return bonus switch
             {
-                Bonus.TripleWord => Brushes.Red,
+                Bonus.TripleWord => Brushes.Tomato,
                 Bonus.DoubleWord => Brushes.LightPink,
-                Bonus.TripleLetter => Brushes.DarkBlue,
+                Bonus.TripleLetter => Brushes.CornflowerBlue,
                 Bonus.DoubleLetter => Brushes.LightBlue,
                 _ => new SolidColorBrush(Color.FromRgb(0x79, 0x97, 0xB9)),
             };
