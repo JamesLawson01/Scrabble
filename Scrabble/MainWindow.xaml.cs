@@ -129,7 +129,7 @@ namespace Scrabble
             players = new();
             players.Add(new User("Player", letterPool.GetRange(0, 7), userScoreLabel));
             letterPool.RemoveRange(0, 7);
-            players.Add(new AI("Computer", letterPool.GetRange(0, 7), AI.Difficulty.High, computerScoreLabel));
+            players.Add(new AI("Computer", letterPool.GetRange(0, 7), AI.Difficulty.Medium, computerScoreLabel));
             letterPool.RemoveRange(0, 7);
             currentPlayer = players[0];
 
@@ -137,7 +137,7 @@ namespace Scrabble
             AddTilesToDock(currentPlayer);
 
             //sets the timer going
-            DispatcherTimer timer = new();//DispatcherPriority.Render);
+            DispatcherTimer timer = new(DispatcherPriority.Render);
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += IncrementTimer;
             timer.Start();
@@ -233,7 +233,7 @@ namespace Scrabble
             }*/
         }
 
-        private void GiveDragCursorFeedback(object sender, GiveFeedbackEventArgs e)
+        /*private void GiveDragCursorFeedback(object sender, GiveFeedbackEventArgs e)
         {
             //canvas.Children.Clear();
             //Image image = new Image((Image)sender).Source);
@@ -244,7 +244,7 @@ namespace Scrabble
             Canvas.SetTop(image, point.Y);
             canvas.Children.Add(image);
             Debug.WriteLine("fired");
-        }
+        }*/
 
         //start drag
         private void DragLetter(object sender, MouseButtonEventArgs e)
@@ -256,8 +256,8 @@ namespace Scrabble
             ImageSource originalImage = image.Source;
             image.AllowDrop = true;
 
-            GiveFeedbackEventHandler handler = new(GiveDragCursorFeedback);
-            image.GiveFeedback += handler;
+            //GiveFeedbackEventHandler handler = new(GiveDragCursorFeedback);
+            //image.GiveFeedback += handler;
 
             //drag from tile dock
             if (image.Parent == tileDock)
@@ -297,7 +297,7 @@ namespace Scrabble
                 }
             }
 
-            image.GiveFeedback -= handler;
+            //image.GiveFeedback -= handler;
         }
 
         //end drag
@@ -381,7 +381,7 @@ namespace Scrabble
         //Called when the button to finish a turn is clicked
         private async void FinishTurnAsync(object sender, RoutedEventArgs e)
         {
-            if (Word.CheckLetterLocation(turnTiles, playedTiles))
+            if (deleteTiles || Word.CheckLetterLocation(turnTiles, playedTiles))
             {
                 Mouse.OverrideCursor = Cursors.Wait;
                 playGrid.IsEnabled = false;
@@ -655,7 +655,17 @@ namespace Scrabble
             playGrid.IsEnabled = false;
         }
 
-        private void DragOverCanvas(object sender, DragEventArgs e)
+        //change difficulty
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (players is not null)
+            {
+                ComboBox comboBox = sender as ComboBox;
+                ((AI)players[1]).difficulty = (AI.Difficulty)comboBox.SelectedIndex;
+            }
+        }
+
+        /*private void DragOverCanvas(object sender, DragEventArgs e)
         {
             Image image = (Image)sender;
             Point point = e.GetPosition(canvas);
@@ -669,5 +679,6 @@ namespace Scrabble
         {
 
         }
+        */
     }
 }
