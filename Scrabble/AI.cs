@@ -15,8 +15,8 @@ namespace Scrabble
 
         public enum Difficulty
         {
-            Medium,
             Low,
+            Medium,
             High
         }
 
@@ -50,7 +50,7 @@ namespace Scrabble
             { Difficulty.High, 100 }
         };
 
-        private readonly Difficulty difficulty;
+        internal Difficulty difficulty;
 
         //private List<Word> temp;
 
@@ -419,7 +419,7 @@ namespace Scrabble
             return output;
         }
 
-        public IEnumerable<Word> Permutate(Word input)
+        private IEnumerable<Word> Permutate(Word input)
         {
             if (input.word.Count == 1)
             {
