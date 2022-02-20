@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Scrabble"
         mc:Ignorable="d"
-        Title="GameOver" Height="450" Width="800" Background="#577DA8">
+        Title="Game Over" Height="450" Width="800" Background="#577DA8">
 
 
     <Grid Margin="100" HorizontalAlignment="Center" VerticalAlignment="Top">
