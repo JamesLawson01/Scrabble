@@ -69,7 +69,7 @@
             </ScrollViewer>
         </Border>
 
-        <ComboBox Grid.Column="1" Grid.Row="2" SelectionChanged="ComboBox_SelectionChanged" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" 
+        <ComboBox x:Name="difficultyComboBox" Grid.Column="1" Grid.Row="2" SelectionChanged="ComboBox_SelectionChanged" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Right" 
                       HorizontalContentAlignment="Center" SelectedIndex="1">
             <ComboBoxItem>Easy</ComboBoxItem>
             <ComboBoxItem>Medium</ComboBoxItem>

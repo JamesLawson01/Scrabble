@@ -282,6 +282,7 @@ namespace Scrabble
                 {
                     //drag operation failed
                     image.Source = originalImage;
+                    image.AllowDrop = false;
                 }
                 else
                 {
@@ -387,10 +388,12 @@ namespace Scrabble
                 playGrid.IsEnabled = false;
                 tileDock.IsEnabled = false;
                 controlButtons.IsEnabled = false;
+                difficultyComboBox.IsEnabled = false;
 
                 Debug.WriteLine("button pressed");
                 await FinishTurnAsync();
 
+                difficultyComboBox.IsEnabled = true;
                 controlButtons.IsEnabled = true;
                 tileDock.IsEnabled = true;
                 playGrid.IsEnabled = true;
