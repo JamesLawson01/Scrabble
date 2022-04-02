@@ -1,0 +1,48 @@
+function IterateWord(coord, direction, previousTiles, currentTiles)
+    startCoord = coord.Clone()  // store starting point for use when going backwards
+    returnWord = new([])
+
+    for (change = 1; change >= -1; change -= 2)
+        if (change == 1) //forwards
+            // start tile
+            for tile in currentTiles
+                if tile.Coord == coord
+                    returnWord = new(tile)
+                    break
+            if (returnWord.word[0] is null)
+                for tile in previousTiles
+                    if tile.Coord == coord
+                        returnWord = new(tile)
+                        break
+                
+        else if (change == -1) //backwards
+            coord = startCoord
+        
+        bool loop = true
+        while (loop)
+            if (direction == Orientation.Horizontal)
+                coord.X += change
+            else
+                coord.Y += change
+
+            //try and get the next tile along
+            if (nextTile is null)
+                for tile in currentTiles
+                    if tile.Coord == coord
+                        nextTile = new(tile)
+            else
+                for tile in previousTiles
+                    if tile.Coord == coord
+                        nextTile = new(tile)
+            
+            //add tile to word
+            if (nextTile is not null)
+                if (change == 1)
+                    returnWord.AppendWord(nextTile)
+                else if (change == -1)
+                    returnWord.PrependWord(nextTile)
+                else
+                    throw error
+            else //end of word reached
+                loop = false
+    return returnWord

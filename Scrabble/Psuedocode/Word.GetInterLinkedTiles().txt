@@ -1,0 +1,35 @@
+function GetInterlinkedTiles(checkTiles, previousTiles)
+
+    //gets relevent coords, to make it easier to check adjecency
+    orientation = GetOrientation(checkTiles)
+    checkCoords = new Set()
+    previousCoords = new Set()
+
+    for tile in previousTiles
+        previousCoords.Add(tile.Coord)
+    for tile in checkTiles
+        checkCoords.Add(tile.Coord)
+
+    //gets all adjecent coords
+    adjecentCoords = []
+    for coord in checkCoords
+        surroundingCoords = coord.GetSurroundingCoords()
+        for surroundingCoord in surroundingCoords
+            if surroundingCoord not in checkCoords
+                adjecentCoords.append(surroundingCoord)
+
+    //filters out coords where a letter hasn't been placed
+    interlinkingCoords = []
+    for coord in adjecentCoords
+        if coord in previousCoords
+            interlinkingCoords.append(coord)
+
+    //converts the coords back to tiles
+    interlinkingTiles = []
+    for coord in interlinkingCoords
+        for tile in previousTiles
+            if tile.Coord == coord
+                interlinkingTiles.append(tile)
+    
+    //removes duplicates
+    return interlinkingTiles.Distinct()

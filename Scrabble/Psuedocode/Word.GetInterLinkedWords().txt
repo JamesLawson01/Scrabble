@@ -1,0 +1,53 @@
+function GetInterLinkedWords(checkTiles, previousTiles)
+    if (checkTiles.Count == 0)
+        return []
+    else if (previousTiles.Count == 0)
+        return [new Word(Word.SortTiles(checkTiles, GetOrientation(checkTiles)))]
+
+    orientation = GetOrientation(checkTiles)
+    sortedTiles = SortTiles(checkTiles, orientation)
+    interlinkingTiles = GetInterlinkedTiles(checkTiles, previousTiles)
+    doneMainWord = false
+    words = []
+
+    // first turn
+    if (interlinkingTiles.Count == 0 AND sortedTiles.Count >= 2)
+        words.append(new Word(sortedTiles))
+        doneMainWord = true
+    
+    for (tile in interlinkingTiles)
+        bool duplicate = false
+
+        //Tile is part of main word
+        if ((orientation == Orientation.Vertical AND tile.Coord.X == checkTiles[0].Coord.X) OR (orientation == Orientation.Horizontal AND tile.Coord.Y == checkTiles[0].Coord.Y))
+            if (!doneMainWord)
+                coord = checkTiles[0].Coord.Clone(); 
+                word = IterateWord(coord, orientation, previousTiles, checkTiles)
+                doneMainWord = true
+            else
+                duplicate = true
+                word = null
+        
+        //Tile forms a new word by crossing over the created word
+        else
+            coord = tile.Coord.Clone()
+            oppositeOrientation
+            if (orientation == Orientation.Vertical)
+                oppositeOrientation = Orientation.Horizontal
+            else
+                oppositeOrientation = Orientation.Vertical
+            
+            word = IterateWord(coord, oppositeOrientation, previousTiles, checkTiles)
+
+            //check for duplicates
+            foreach (Word listWord in words)
+                if (listWord.ToString() == word.ToString() && listWord.word[0].Coord == word.word[0].Coord && listWord.GetOrientation() == word.GetOrientation())
+                    duplicate = true
+        if (!duplicate && word.word.Count >= 2)
+            words.Add(word)
+    
+    //no interlinking tiles are needed to create main word
+    if (!doneMainWord && sortedTiles.Count >= 2)
+        words.Insert(0, new(sortedTiles))
+    
+    return words

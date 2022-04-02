@@ -1,0 +1,157 @@
+function GetTilesToPlaceAsync(List<Tile> previousTiles)
+    wordLocations = []
+
+    //gets all words of all lengths with all possible starting coords
+    for (int i=0; i<15; i++)
+        for (int j=0; j<15; j++)
+            coord = new (i, j)
+            iterationWords = []
+
+            iterationWords.append(IterateWord(coord.Clone(), Orientation.Horizontal, previousTiles))
+            iterationWords.append(IterateWord(coord.Clone(), Orientation.Vertical, previousTiles))
+
+            //add Word objects that aren't blank to words
+            for (word in iterationWords)
+                add = false
+                numBlanks = 0
+                for (tile in word.word)
+                    if (tile.Letter != ' ' || previousTiles.Count == 0)
+                        add = true
+                    if (tile.Letter == ' ')
+                        numBlanks++                
+                if (add && numBlanks > 0 && numBlanks <= 7)
+                    wordLocations.append(word)    
+
+    //removes words that have a placed tile before or after them, as that tile would form part of the word.
+    //the word with that tile included is already elsewhere in the words list
+    if (previousTiles.Count > 0)
+        t = 0
+        removed = true
+        loop = true
+        while (loop)
+            removed = false
+            word = wordLocations[t]
+            boundingTiles = []
+            orientation = word.GetOrientation()
+            firstCoord = word.word[0].Coord
+            lastCoord = word.word.Last().Coord
+
+            //gets the coord immediately before and immediately after the word
+            if (orientation == Orientation.Horizontal)
+                boundingCoords = [new Coord(firstCoord.X - 1, firstCoord.Y), new Coord(lastCoord.X + 1, lastCoord.Y)]
+            else
+                boundingCoords = [new Coord(firstCoord.X, firstCoord.Y - 1), new Coord(lastCoord.X, lastCoord.Y + 1)]
+
+            //removes the word if a tile has been placed at a boundingCoord
+            for (boundingCoord in boundingCoords)
+                if (!boundingCoord.IsOutsideBounds())
+                    for (tile in previousTiles)
+                        if tile.Coord == boundingCoord
+                        boundingTile = tile
+                    if (boundingTile is not null)
+                        wordLocations.Remove(word)
+                        removed = true
+                        break
+
+            //moves the counter along, if the word hasn't been removed
+            if (!removed)
+                t += 1
+            
+            //reached the end of the words list
+            if (t >= wordLocations.Count)
+                loop = false    
+    else
+        //no tiles placed so word must occupy the centre cell
+        tempWordLocations = []
+        for (word in wordLocations)
+            bool centre = false
+            for (tile in word.word)
+                if (tile.Coord == new Coord(7, 7))
+                    centre = true
+                    break
+            
+            if (centre)
+                tempWordLocations.append(word)
+        wordLocations = tempWordLocations
+
+    //generate all ways of arranging the 7 tiles available to the AI
+    List<Word> permutations = new()
+    List<Word> combinations = Combinations(new Word(Tiles.ToList()))
+    for (Word combination in combinations)
+        permutations.AddRange(Permutate(combination))    
+    
+    //generate all possible words
+    words = []
+    for(location in wordLocations)
+        for(permutation in permutations)
+            newWord = location.Clone()
+            blanks = []
+            for (tile in newWord.word)
+                if (tile.Letter == ' ')
+                    blanks.append(tile)
+
+            if (permutation.word.Count == blanks.Count)
+                lettersPlaced = []
+                i = 0
+                j = 0
+                for (tile in location.word)
+                    if (tile.Letter == ' ')
+                        newWord.word[i] = permutation.word[j]
+                        lettersPlaced.append(new Tile(permutation.word[j].Letter, tile.Coord))
+                        newWord.word[i].Coord = tile.Coord
+                        j += 1
+                    i += 1
+                
+                //check word is in dictionary
+                if (newWord.Validate())
+                    newWords = Word.GetInterLinkedWords(lettersPlaced, previousTiles)
+                    score = 0
+                    invalid = false
+                    allowedInvalid = 0
+                    for (tempNewWord in newWords)
+                        randomNum = random(0, 101)
+                        if (!tempNewWord.Validate())
+                            if (randomNum >= invalidWordChance[difficulty] OR allowedInvalid >= 1)
+                                invalid = true
+                                break
+                            else
+                                allowedInvalid += 1                            
+                        score += tempNewWord.Value
+                    if (!invalid)
+                        words.append((lettersPlaced, score))
+        
+    if (words.Count == 0)
+        return []
+
+    tempDifficulty = difficulty
+    while (true)
+        if (tempDifficulty == Difficulty.High)
+            bestMove = words[0]
+            for (tuple in words)
+                if (tuple[1] > bestMove[1])
+                    bestMove = tuple
+            return bestMove[0]
+        else
+            sortedWords = order words descending by second value in tuples
+            valid = false
+            i = 0
+
+            while (!valid)
+                interlinkedWords = Word.GetInterLinkedWords(sortedWords[i][0], previousTiles)
+                popularities = []
+                for (interlinkedWord in interlinkedWords)
+                    popularities.append(interlinkedWord.GetPopularity())
+
+                minPopularity = popularities.Min()
+                if (minPopularity > difficultyThreshold[tempDifficulty]) //check if word is popular enough fo the difficulty
+                    valid = true
+                    return sortedWords[i].Item1
+
+                i += 1
+                if (i > sortedWords.Count - 1)
+                    break
+
+            if (tempDifficulty == Difficulty.Low)
+                tempDifficulty = Difficulty.Medium
+            else
+                tempDifficulty = Difficulty.High
