@@ -668,6 +668,13 @@ namespace Scrabble
             }
         }
 
+        private void ShowHelp(object sender, RoutedEventArgs e)
+        {
+            Instructions instructions = new();
+            instructions.Owner = this;
+            instructions.ShowDialog();
+        }
+
         /*private void DragOverCanvas(object sender, DragEventArgs e)
         {
             Image image = (Image)sender;

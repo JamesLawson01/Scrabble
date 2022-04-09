@@ -31,7 +31,7 @@ namespace Scrabble
         public int Score { get { return score; } }
 
         private int previousScore;
-        private List<Word> previouseWords;
+        private List<Word> previousWords;
 
         public Label scoreLabel;
 
@@ -67,8 +67,8 @@ namespace Scrabble
 
             previousTiles = new();
             previousTiles.AddRange(Tiles);
-            previouseWords = new();
-            previouseWords.AddRange(Words);
+            previousWords = new();
+            previousWords.AddRange(Words);
         }
 
         //removes tiles that have been placed and adds new ones
@@ -113,7 +113,7 @@ namespace Scrabble
             tiles.Clear();
             tiles.AddRange(previousTiles);
             words.Clear();
-            words.AddRange(previouseWords);
+            words.AddRange(previousWords);
 
             score = previousScore;
             scoreLabel.Content = score;
